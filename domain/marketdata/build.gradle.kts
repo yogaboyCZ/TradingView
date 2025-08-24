@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "cz.yogaboy.data.marketdata"
+    namespace = "cz.yogaboy.domain.marketdata"
     compileSdk {
         version = release(36)
     }

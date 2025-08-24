@@ -1,6 +1,6 @@
 package cz.yogaboy.data.marketdata.alpha.di
 
-import cz.yogaboy.data.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.data.marketdata.alpha.BuildConfig
 import cz.yogaboy.data.marketdata.alpha.network.AlphaVantageApi
 import cz.yogaboy.data.marketdata.alpha.repository.AlphaMarketDataRepository
@@ -16,6 +16,11 @@ val marketDataAlphaModule = module {
 
 val marketDataAlphaNetworkModule = module {
     single(named("alphaApiKey")) { BuildConfig.API_KEY }
+//    single(named("alphaMoshi")) {
+//        Moshi.Builder()
+//            .add(KotlinJsonAdapterFactory())
+//            .build()
+//    }
     single(named("alphaRetrofit")) {
         Retrofit.Builder()
             .baseUrl(BuildConfig.BASE_URI)

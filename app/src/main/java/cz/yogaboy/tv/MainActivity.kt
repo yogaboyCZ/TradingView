@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import cz.yogaboy.app.RootNavGraph
-import cz.yogaboy.data.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.tv.ui.theme.TradingViewTheme
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject

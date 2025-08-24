@@ -39,7 +39,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    implementation(project(":data:marketdata"))
+    implementation(project(":domain:marketdata"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

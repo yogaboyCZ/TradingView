@@ -1,6 +1,6 @@
 package cz.yogaboy.feature.stocks.di
 
-import cz.yogaboy.data.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import cz.yogaboy.feature.stocks.presentation.StocksViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel

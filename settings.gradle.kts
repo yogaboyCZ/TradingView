@@ -22,6 +22,6 @@ dependencyResolutionManagement {
 rootProject.name = "TradingView"
 include(":app")
 include(":core:network")
-include(":data:marketdata")
+include(":domain:marketdata")
 include(":data:marketdata-alpha")
 include(":feature:stocks")

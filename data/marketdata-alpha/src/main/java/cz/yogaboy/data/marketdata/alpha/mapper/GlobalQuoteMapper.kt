@@ -1,6 +1,6 @@
 package cz.yogaboy.data.marketdata.alpha.mapper
 
-import cz.yogaboy.data.marketdata.Price
+import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.data.marketdata.alpha.dto.GlobalQuoteEnvelope
 
 /**

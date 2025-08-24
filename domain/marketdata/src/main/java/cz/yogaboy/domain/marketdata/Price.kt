@@ -1,4 +1,4 @@
-package cz.yogaboy.data.marketdata
+package cz.yogaboy.domain.marketdata
 
 data class Price(
     val ticker: String,

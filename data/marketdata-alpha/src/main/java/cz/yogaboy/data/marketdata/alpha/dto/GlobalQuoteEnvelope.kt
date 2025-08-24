@@ -1,12 +1,15 @@
 package cz.yogaboy.data.marketdata.alpha.dto
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class GlobalQuoteEnvelope(
     @field:Json(name = "Global Quote")
     val quote: GlobalQuote?
 )
 
+@JsonClass(generateAdapter = true)
 data class GlobalQuote(
     @field:Json(name = "01. symbol") val symbol: String?,
     @field:Json(name = "02. open")   val open: String?,

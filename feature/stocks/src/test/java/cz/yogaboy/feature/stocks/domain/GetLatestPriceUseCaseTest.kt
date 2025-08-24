@@ -1,7 +1,7 @@
 package cz.yogaboy.feature.stocks.domain
 
-import cz.yogaboy.data.marketdata.MarketDataRepository
-import cz.yogaboy.data.marketdata.Price
+import cz.yogaboy.domain.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.Price
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

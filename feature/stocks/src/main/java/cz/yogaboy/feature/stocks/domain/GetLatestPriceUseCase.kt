@@ -1,7 +1,8 @@
 package cz.yogaboy.feature.stocks.domain
 
-import cz.yogaboy.data.marketdata.MarketDataRepository
-import cz.yogaboy.data.marketdata.Price
+import cz.yogaboy.domain.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.Price
+
 
 class GetLatestPriceUseCase(
     private val repo: MarketDataRepository

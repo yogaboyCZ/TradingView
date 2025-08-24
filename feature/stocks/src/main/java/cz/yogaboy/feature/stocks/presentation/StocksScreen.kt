@@ -10,7 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import cz.yogaboy.data.marketdata.Price
+import cz.yogaboy.domain.marketdata.Price
 
 
 @Composable

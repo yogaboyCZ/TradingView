@@ -48,7 +48,7 @@ android {
 
 dependencies {
     implementation(project(":core:network"))
-    implementation(project(":data:marketdata"))
+    implementation(project(":domain:marketdata"))
     implementation(project(":data:marketdata-alpha"))
     implementation(project(":feature:stocks"))
 

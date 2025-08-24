@@ -1,8 +1,8 @@
 package cz.yogaboy.feature.stocks.presentation
 
 import app.cash.turbine.test
-import cz.yogaboy.data.marketdata.MarketDataRepository
-import cz.yogaboy.data.marketdata.Price
+import cz.yogaboy.domain.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import cz.yogaboy.feature.stocks.testutil.MainDispatcherExtension
 import kotlinx.coroutines.ExperimentalCoroutinesApi

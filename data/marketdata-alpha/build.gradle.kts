@@ -77,7 +77,7 @@ android {
 
 dependencies {
     implementation(project(":core:network"))
-    implementation(project(":data:marketdata"))
+    implementation(project(":domain:marketdata"))
     implementation(libs.squareup.retrofit2)
     implementation(libs.squareup.retrofit2.converter.moshi)
     implementation(libs.squareup.moshi.kotlin)

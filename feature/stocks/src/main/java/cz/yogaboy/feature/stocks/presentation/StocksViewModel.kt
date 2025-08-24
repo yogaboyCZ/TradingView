@@ -2,7 +2,7 @@ package cz.yogaboy.feature.stocks.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cz.yogaboy.data.marketdata.Price
+import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
