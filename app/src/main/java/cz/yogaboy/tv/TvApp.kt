@@ -8,6 +8,8 @@ import cz.yogaboy.feature.stocks.di.stocksFeatureModule
 import cz.yogaboy.feature.stocks.di.stocksPresentationModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import cz.yogaboy.feature.home.di.homeModule
+
 
 class TvApp : Application() {
     override fun onCreate() {
@@ -19,7 +21,8 @@ class TvApp : Application() {
                 marketDataAlphaNetworkModule,
                 marketDataAlphaModule,
                 stocksFeatureModule,
-                stocksPresentationModule
+                stocksPresentationModule,
+                homeModule,
             )
         }
     }

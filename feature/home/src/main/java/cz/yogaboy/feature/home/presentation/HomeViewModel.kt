@@ -17,12 +17,6 @@ sealed interface HomeUiState {
     data class Error(val message: String) : HomeUiState
 }
 
-sealed interface HomeEvent {
-    data class QueryChanged(val value: String) : HomeEvent
-    data object Submit : HomeEvent
-    data class Select(val item: SymbolUi) : HomeEvent
-}
-
 sealed interface HomeEffect {
     data class NavigateToDetail(val symbol: String) : HomeEffect
 }
@@ -57,7 +51,7 @@ class HomeViewModel(
         when (event) {
             is HomeEvent.QueryChanged -> query.value = event.value
             HomeEvent.Submit -> submit.tryEmit(Unit)
-            is HomeEvent.Select -> viewModelScope.launch { _effects.emit(HomeEffect.NavigateToDetail(event.item.symbol)) }
+            is HomeEvent.Select -> viewModelScope.launch {  }
         }
     }
 }

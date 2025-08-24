@@ -5,13 +5,22 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import cz.yogaboy.feature.home.presentation.HomeRoute
 import cz.yogaboy.feature.stocks.presentation.StocksRoute
+import cz.yogaboy.tv.nav.HomeDest
 import cz.yogaboy.tv.nav.StocksDest
 
 @Composable
 fun RootNavGraph() {
-    val backStack = rememberNavBackStack(StocksDest("AAPL"))
+    val backStack = rememberNavBackStack(HomeDest)
     NavDisplay(backStack, entryProvider = entryProvider {
+        entry<HomeDest> {
+            HomeRoute(
+                onNavigateToDetail = { ticker ->
+                    backStack.add(StocksDest(ticker))
+                }
+            )
+        }
         entry<StocksDest> { key ->
             StocksRoute(
                 ticker = key.ticker,

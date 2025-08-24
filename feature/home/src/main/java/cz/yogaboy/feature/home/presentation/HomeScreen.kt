@@ -22,11 +22,11 @@ import androidx.compose.ui.draw.clip
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onSearch: (String) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var query by remember { mutableStateOf("") }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -54,9 +54,9 @@ fun HomeScreen(
                     Spacer(Modifier.height(8.dp))
                     TopSearchBar(
                         value = query,
-                        onValueChange = { query = it },
-                        onSearch = { if (query.isNotBlank()) onSearch(query) },
-                        onClear = { query = "" }
+                        onValueChange = onQueryChange,
+                        onSearch = { if (query.isNotBlank()) onSearch() },
+                        onClear = { onQueryChange("") }
                     )
                 }
             }
@@ -109,7 +109,9 @@ private fun TopSearchBar(
             },
             placeholder = { Text("aapl, nvda, msft…") },
             singleLine = true,
-            modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onSearch() }),
@@ -126,7 +128,7 @@ private fun TopSearchBar(
                 focusedLeadingIconColor = Color.White,
                 unfocusedLeadingIconColor = Color.White,
                 focusedTrailingIconColor = Color.White,
-                unfocusedTrailingIconColor = Color.White,
+                unfocusedTrailingIconColor = Color.White
             )
         )
         Spacer(Modifier.width(8.dp))
@@ -146,5 +148,9 @@ private fun TopSearchBar(
 @Preview(showBackground = true, widthDp = 390)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(onSearch = {})
+    HomeScreen(
+        query = "",
+        onQueryChange = {},
+        onSearch = {}
+    )
 }

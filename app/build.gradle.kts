@@ -50,7 +50,9 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":domain:marketdata"))
     implementation(project(":data:marketdata-alpha"))
+    implementation(project(":feature:home"))
     implementation(project(":feature:stocks"))
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
