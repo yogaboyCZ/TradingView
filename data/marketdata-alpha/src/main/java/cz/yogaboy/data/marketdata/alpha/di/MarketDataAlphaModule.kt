@@ -1,7 +1,9 @@
-package cz.yogaboy.data.marketdata.alpha
+package cz.yogaboy.data.marketdata.alpha.di
 
-import cz.yogaboy.core.network.BuildConfig
 import cz.yogaboy.data.marketdata.MarketDataRepository
+import cz.yogaboy.data.marketdata.alpha.BuildConfig
+import cz.yogaboy.data.marketdata.alpha.network.AlphaVantageApi
+import cz.yogaboy.data.marketdata.alpha.repository.AlphaMarketDataRepository
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit

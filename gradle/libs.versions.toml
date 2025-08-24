@@ -1,8 +1,6 @@
 [versions]
 
 # Project
-koinAndroid = "4.1.0"
-koinCore = "4.1.0"
 namespace = "cz.csas.app.espisodvoz"
 minSdk = "26"
 targetSdk = "34"
@@ -34,6 +32,7 @@ converter-moshi = "2.9.0"
 moshi-kotlin = "1.15.2"
 gson = "2.13.1"
 chucker_log = "4.2.0"
+lifecycleRuntimeCompose = "2.9.2"
 
 
 [libraries]
@@ -50,10 +49,11 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "composeNavigation" }
 
-koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
-koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinCore" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
-koin-androidx-compose-navigation = { module = "io.insert-koin:koin-androidx-compose-navigation", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+
 
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit5" }
 junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit5" }
@@ -80,6 +80,7 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 chucker-log = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker_log" }
 chucker-log-no-op = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker_log" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import cz.yogaboy.app.RootNavGraph
 import cz.yogaboy.data.marketdata.MarketDataRepository
 import cz.yogaboy.tv.ui.theme.TradingViewTheme
 import kotlinx.coroutines.launch
@@ -35,17 +36,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TradingViewTheme {
-
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(uiText)
-                    }
-                }
+                RootNavGraph()
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxSize()
+//                            .padding(innerPadding),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        Text(uiText)
+//                    }
+//                }
             }
         }
     }
