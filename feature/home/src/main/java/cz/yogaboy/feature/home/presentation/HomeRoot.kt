@@ -31,6 +31,7 @@ fun HomeRoute(
             query = it
             viewModel.handle(HomeEvent.QueryChanged(it))
         },
-        onSearch = { viewModel.handle(HomeEvent.Submit) }
+        onSearch = { viewModel.handle(HomeEvent.Submit) },
+        showPlaceholder = true,
     )
 }

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,16 +26,14 @@ fun HomeScreen(
     query: String,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    showPlaceholder: Boolean,
+    content: @Composable (Modifier) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    listOf(Color(0xFF2E7DFF), Color(0xFF6A5CF6))
-                )
-            )
+            .background(Brush.linearGradient(listOf(Color(0xFF2E7DFF), Color(0xFF6A5CF6))))
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -66,25 +65,30 @@ fun HomeScreen(
                     .padding(padding)
                     .fillMaxSize()
             ) {
-                Spacer(Modifier.height(12.dp))
-                ElevatedCard(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                    )
-                ) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text("Domovská obrazovka", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(6.dp))
-                        Text("Výsledky vyhledávání a graf zobrazíme po zadání produktu.")
+                if (showPlaceholder) {
+                    Spacer(Modifier.height(12.dp))
+                    ElevatedCard(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth(),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                        )
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("Domovská obrazovka", style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(6.dp))
+                            Text("Výsledky vyhledávání a graf zobrazíme po zadání produktu.")
+                        }
                     }
+                    Spacer(Modifier.height(12.dp))
                 }
+                content(Modifier.fillMaxSize())
             }
         }
     }
 }
+
 
 @Composable
 private fun TopSearchBar(
@@ -94,6 +98,7 @@ private fun TopSearchBar(
     onClear: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusManager = LocalFocusManager.current
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -109,9 +114,7 @@ private fun TopSearchBar(
             },
             placeholder = { Text("aapl, nvda, msft…") },
             singleLine = true,
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(16.dp)),
+            modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onSearch() }),
@@ -133,7 +136,12 @@ private fun TopSearchBar(
         )
         Spacer(Modifier.width(8.dp))
         Button(
-            onClick = onSearch,
+            onClick = {
+                if (value.isNotBlank()) {
+                    focusManager.clearFocus(force = true)
+                    onSearch()
+                }
+            },
             enabled = value.isNotBlank(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.White,
@@ -151,6 +159,7 @@ fun HomeScreenPreview() {
     HomeScreen(
         query = "",
         onQueryChange = {},
-        onSearch = {}
+        showPlaceholder = true,
+        onSearch = {},
     )
 }

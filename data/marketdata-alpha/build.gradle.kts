@@ -47,7 +47,8 @@ android {
         create("dev") {
             dimension = "env"
             buildConfigField("String", "API_KEY", apiKeyValue)
-            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
+//            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
+            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
         }
         create("prod") {
             dimension = "env"

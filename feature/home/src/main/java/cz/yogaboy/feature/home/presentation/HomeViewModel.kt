@@ -7,6 +7,8 @@ import cz.yogaboy.feature.home.domain.SymbolUi
 import cz.yogaboy.feature.home.domain.toUi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -21,6 +23,12 @@ sealed interface HomeEffect {
     data class NavigateToDetail(val symbol: String) : HomeEffect
 }
 
+sealed interface HomeEvent {
+    data class QueryChanged(val value: String) : HomeEvent
+    data object Submit : HomeEvent
+    data class Select(val item: SymbolUi) : HomeEvent
+}
+
 class HomeViewModel(
     private val search: SearchSymbolsUseCase,
     private val io: CoroutineDispatcher = Dispatchers.IO
@@ -31,6 +39,7 @@ class HomeViewModel(
     private val _effects = MutableSharedFlow<HomeEffect>()
     val effects: SharedFlow<HomeEffect> = _effects.asSharedFlow()
 
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     val uiState: StateFlow<HomeUiState> =
         merge(
             query.debounce(400).distinctUntilChanged().map { it },
@@ -50,8 +59,14 @@ class HomeViewModel(
     fun handle(event: HomeEvent) {
         when (event) {
             is HomeEvent.QueryChanged -> query.value = event.value
-            HomeEvent.Submit -> submit.tryEmit(Unit)
-            is HomeEvent.Select -> viewModelScope.launch {  }
+            HomeEvent.Submit -> {
+                val q = query.value.trim()
+                if (q.isNotEmpty()) {
+                    submit.tryEmit(Unit)
+                    viewModelScope.launch { _effects.emit(HomeEffect.NavigateToDetail(q)) }
+                }
+            }
+            is HomeEvent.Select -> viewModelScope.launch { }
         }
     }
 }
