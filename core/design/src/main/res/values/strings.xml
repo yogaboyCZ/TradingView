@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_title">Trading View</string>
+    <string name="home_search_placeholder">aapl, nvda, msft…</string>
+    <string name="home_search_button">Hledat</string>
+    <string name="home_card_title">Domovská obrazovka</string>
+    <string name="home_card_desc">Výsledky vyhledávání a graf zobrazíme po zadání produktu.</string>
+    <string name="stocks_price">Cena %1$s: %2$s</string>
+    <string name="stocks_error">Došlo k chybě</string>
+    <string name="stocks_loading">Načítání…</string>
+    <string name="stocks_errors">Betuska</string>
+</resources>

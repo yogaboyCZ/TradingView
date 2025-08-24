@@ -36,6 +36,7 @@ lifecycleRuntimeCompose = "2.9.2"
 
 navigation3 = "1.0.0-alpha07"
 kotlinx-serialization-json = "1.7.3"
+splashscreen = "1.0.1"
 
 
 [libraries]
@@ -88,6 +89,9 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 chucker-log = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker_log" }
 chucker-log-no-op = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker_log" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
+
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

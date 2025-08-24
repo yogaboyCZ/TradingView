@@ -40,6 +40,7 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     implementation(project(":domain:marketdata"))
+    implementation(project(":core:design"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
