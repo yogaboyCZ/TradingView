@@ -29,8 +29,7 @@ android {
     }
 
     val apiKey = resolveApiKey("API_KEY")
-    if (apiKey.isBlank()) {
-        throw GradleException(
+    if (apiKey.isBlank()) { throw GradleException(
             """
                 API key not found!
                 Please add API_KEY to your local.properties file 

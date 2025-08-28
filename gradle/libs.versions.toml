@@ -7,7 +7,7 @@ targetSdk = "34"
 compileSdk = "34"
 composeCompilerVersion = "1.5.3"
 
-agp = "9.0.0-alpha01"
+agp = "9.0.0-alpha02"
 kotlin = "2.2.10"
 com-google-devtools-ksp = "2.2.10-2.0.2"
 coreKtx = "1.17.0"
