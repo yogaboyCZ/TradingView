@@ -21,8 +21,10 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
-import cz.yogaboy.core.design.Dimens
 import cz.yogaboy.core.design.LocalDimens
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.ExperimentalComposeUiApi
 import cz.yogaboy.core.design.R as DR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,6 +131,8 @@ private fun TopSearchBar(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -136,10 +140,25 @@ private fun TopSearchBar(
         TextField(
             value = value,
             onValueChange = onValueChange,
+            modifier = modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(LocalDimens.current.radiusLarge)),
+            singleLine = true,
+            shape = RoundedCornerShape(LocalDimens.current.radiusLarge),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    if (value.isNotBlank()) {
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
+                        onSearch()
+                    }
+                }
+            ),
             leadingIcon = {
                 Icon(
-                    Icons.Filled.Search,
-                    null,
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onTertiary
                 )
             },
@@ -147,11 +166,12 @@ private fun TopSearchBar(
                 if (value.isNotEmpty()) {
                     IconButton(onClick = {
                         onClear()
-                        focusManager.clearFocus(force = true)
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
                     }) {
                         Icon(
-                            Icons.Filled.Close,
-                            null,
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onTertiary
                         )
                     }
@@ -159,22 +179,10 @@ private fun TopSearchBar(
             },
             placeholder = {
                 Text(
-                    stringResource(DR.string.home_search_placeholder),
+                    text = stringResource(DR.string.home_search_placeholder),
                     color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.75f)
                 )
             },
-            singleLine = true,
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(LocalDimens.current.radiusLarge)),
-            shape = RoundedCornerShape(LocalDimens.current.radiusLarge),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                if (value.isNotBlank()) {
-                    focusManager.clearFocus(force = true)
-                    onSearch()
-                }
-            }),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f),
                 unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
