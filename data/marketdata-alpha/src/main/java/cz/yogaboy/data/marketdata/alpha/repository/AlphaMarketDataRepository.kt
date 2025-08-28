@@ -14,9 +14,15 @@ class AlphaMarketDataRepository(
 //        val result = api.getGlobalQuote(symbol = ticker, apiKey = apiKey).toDomain(fallbackTicker = ticker)
 //        Log.d("LSY___","LSY stock price for $ticker is $result")
 //        val raw = api.getGlobalQuoteRaw(symbol = ticker, apiKey = apiKey).string()
-        val body = api.getPriceRaw(symbol = ticker, apiKey = apiKey).string()
-        val last = JSONObject(body).getString("price").toDouble()
-        Log.d("LSY___$ticker", "RAW=$body")
-        return Price(ticker = ticker, last = last)
+        return try {
+            val body = api.getPriceRaw(symbol = ticker, apiKey = apiKey).string()
+            Log.d("LSY___$ticker", "RAW=$body")
+
+            val last = JSONObject(body).optString("price", null)?.toDoubleOrNull()
+            if (last != null) Price(ticker = ticker, last = last) else null
+        } catch (t: Throwable) {
+            Log.w("AlphaMarketDataRepository", "Failed to parse price for $ticker", t)
+            null
+        }
     }
 }
