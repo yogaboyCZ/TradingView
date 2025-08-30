@@ -1,7 +1,7 @@
 package cz.yogaboy.tv
 
 import android.app.Application
-import cz.yogaboy.core.network.networkModule
+import cz.yogaboy.core.network.di.networkModule
 import cz.yogaboy.data.marketdata.alpha.di.marketDataAlphaModule
 import cz.yogaboy.data.marketdata.alpha.di.marketDataAlphaNetworkModule
 import cz.yogaboy.feature.stocks.di.stocksFeatureModule

@@ -3,7 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.com.google.devtools.ksp)
+//    alias(libs.plugins.com.google.devtools.ksp)
 }
 
 fun Project.resolveApiKey(keyName: String): String {
@@ -78,12 +78,12 @@ dependencies {
 
     api(libs.squareup.retrofit2)
     api(libs.squareup.retrofit2.converter.moshi)
-    api(libs.squareup.moshi.kotlin)
-    ksp(libs.squareup.moshi.kotlin.codegen)
+//    api(libs.squareup.moshi.kotlin)
+//    ksp(libs.squareup.moshi.kotlin.codegen)
 
+//    implementation(libs.koin.android)
+    implementation(libs.koin.core)
     debugImplementation(libs.chucker.log)
     releaseImplementation(libs.chucker.log.no.op)
 
-    implementation(libs.koin.android)
-    implementation(libs.koin.core)
 }

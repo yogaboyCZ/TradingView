@@ -18,7 +18,7 @@ class AlphaMarketDataRepository(
             val body = api.getPriceRaw(symbol = ticker, apiKey = apiKey).string()
             Log.d("LSY___$ticker", "RAW=$body")
 
-            val last = JSONObject(body).optString("price", null)?.toDoubleOrNull()
+            val last = JSONObject(body).optString("price", "error").toDoubleOrNull()
             if (last != null) Price(ticker = ticker, last = last) else null
         } catch (t: Throwable) {
             Log.w("AlphaMarketDataRepository", "Failed to parse price for $ticker", t)

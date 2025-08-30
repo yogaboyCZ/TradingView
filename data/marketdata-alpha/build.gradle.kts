@@ -3,7 +3,8 @@ import kotlin.apply
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.com.google.devtools.ksp)
+//    alias(libs.plugins.com.google.devtools.ksp)
+//    alias(libs.plugins.kotlin.android)
 }
 
 fun Project.resolveApiKey(keyName: String): String {
@@ -46,8 +47,8 @@ android {
         create("dev") {
             dimension = "env"
             buildConfigField("String", "API_KEY", apiKeyValue)
-            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
-//            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
+//            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
+            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
         }
         create("prod") {
             dimension = "env"
@@ -78,7 +79,7 @@ dependencies {
     implementation(libs.squareup.retrofit2)
     implementation(libs.squareup.retrofit2.converter.moshi)
     implementation(libs.squareup.moshi.kotlin)
-    ksp(libs.squareup.moshi.kotlin.codegen)
+//    ksp(libs.squareup.moshi.kotlin.codegen)
 
     implementation(libs.koin.core)
 }
