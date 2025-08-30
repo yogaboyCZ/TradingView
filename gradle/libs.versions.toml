@@ -7,7 +7,7 @@ targetSdk = "34"
 compileSdk = "34"
 composeCompilerVersion = "1.5.3"
 
-agp = "9.0.0-alpha02"
+agp = "9.0.0-alpha03"
 kotlin = "2.2.10"
 com-google-devtools-ksp = "2.2.10-2.0.2"
 coreKtx = "1.17.0"
@@ -95,7 +95,6 @@ androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", versi
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 com-google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "com-google-devtools-ksp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

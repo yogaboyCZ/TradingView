@@ -3,7 +3,6 @@ import kotlin.apply
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.com.google.devtools.ksp)
 }
 
@@ -47,8 +46,8 @@ android {
         create("dev") {
             dimension = "env"
             buildConfigField("String", "API_KEY", apiKeyValue)
-//            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
-            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
+            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
+//            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
         }
         create("prod") {
             dimension = "env"
@@ -69,9 +68,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
     }
     buildFeatures { buildConfig = true }
 }

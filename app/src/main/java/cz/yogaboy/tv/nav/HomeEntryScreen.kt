@@ -13,9 +13,9 @@ fun HomeEntryScreen() {
     var selectedTicker by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        vm.effects.collect { e ->
-            when (e) {
-                is HomeEffect.NavigateToDetail -> selectedTicker = e.symbol
+        vm.effects.collect { effect ->
+            when (effect) {
+                is HomeEffect.NavigateToDetail -> selectedTicker = effect.ticker
             }
         }
     }

@@ -20,7 +20,7 @@ sealed interface HomeUiState {
 }
 
 sealed interface HomeEffect {
-    data class NavigateToDetail(val symbol: String) : HomeEffect
+    data class NavigateToDetail(val ticker: String) : HomeEffect
 }
 
 sealed interface HomeEvent {
@@ -39,22 +39,22 @@ class HomeViewModel(
     private val _effects = MutableSharedFlow<HomeEffect>()
     val effects: SharedFlow<HomeEffect> = _effects.asSharedFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val uiState: StateFlow<HomeUiState> =
-        merge(
-            query.debounce(400).distinctUntilChanged().map { it },
-            submit.map { query.value }
-        ).flatMapLatest { q ->
-            flow {
-                if (q.isBlank()) emit(HomeUiState.Idle)
-                else {
-                    emit(HomeUiState.Loading)
-                    val result = search(q).map { it.toUi() }
-                    emit(HomeUiState.Success(result))
-                }
-            }.catch { emit(HomeUiState.Error(it.message.orEmpty())) }
-                .flowOn(io)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState.Idle)
+//    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+//    val uiState: StateFlow<HomeUiState> =
+//        merge(
+//            query.debounce(400).distinctUntilChanged().map { it },
+//            submit.map { query.value }
+//        ).flatMapLatest { q ->
+//            flow {
+//                if (q.isBlank()) emit(HomeUiState.Idle)
+//                else {
+//                    emit(HomeUiState.Loading)
+//                    val result = search(q).map { it.toUi() }
+//                    emit(HomeUiState.Success(result))
+//                }
+//            }.catch { emit(HomeUiState.Error(it.message.orEmpty())) }
+//                .flowOn(io)
+//        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState.Idle)
 
     fun handle(event: HomeEvent) {
         when (event) {
