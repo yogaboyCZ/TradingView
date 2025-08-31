@@ -5,16 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
+import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.Locale
 
 data class StocksState(
     val loading: Boolean = false,
-    val alphaPrice: Price? = null,
-    val twelvePrice: Price? = null,
+    val alphaPrice: DisplayPrice? = null,
+    val twelvePrice: DisplayPrice? = null,
     val error: String? = null
 )
 
@@ -53,8 +58,8 @@ class StocksViewModel(
             _state.update { s ->
                 s.copy(
                     loading = false,
-                    alphaPrice = alpha.getOrNull(),
-                    twelvePrice = twelve.getOrNull(),
+                    alphaPrice = alpha.getOrNull()?.toDisplay(),
+                    twelvePrice = twelve.getOrNull()?.toDisplay(),
                     error = when {
                         alpha.isFailure && twelve.isFailure ->
                             alpha.exceptionOrNull()?.message ?: twelve.exceptionOrNull()?.message
@@ -67,3 +72,20 @@ class StocksViewModel(
         }
     }
 }
+
+private val IN_FMT  = DateTimeFormatter.ISO_LOCAL_DATE
+private val OUT_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale("cs", "CZ"))
+
+fun Price.toDisplay(): DisplayPrice =
+    DisplayPrice(
+        ticker = ticker,
+        last = last,
+        change = change,
+        changePercent = changePercent,
+        previousClose = previousClose,
+        name = name,
+        asOf = asOf?.let { raw ->
+            try { LocalDate.parse(raw, IN_FMT).format(OUT_FMT) } catch (_: DateTimeParseException) { raw }
+
+        }
+    )

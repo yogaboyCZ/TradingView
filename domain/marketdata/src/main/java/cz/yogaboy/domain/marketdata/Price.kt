@@ -7,4 +7,5 @@ data class Price(
     val changePercent: Double? = null,
     val previousClose: Double? = null,
     val asOf: String? = null,
+    val name: String? = null,
 )
