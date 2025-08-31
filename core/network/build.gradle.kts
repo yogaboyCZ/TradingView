@@ -27,7 +27,7 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
-    val apiKey = resolveApiKey("API_KEY")
+    val apiKey = resolveApiKey("API_KEY_ALPHA")
     if (apiKey.isBlank()) { throw GradleException(
             """
                 API key not found!
@@ -78,7 +78,8 @@ dependencies {
 
     api(libs.squareup.retrofit2)
     api(libs.squareup.retrofit2.converter.moshi)
-//    api(libs.squareup.moshi.kotlin)
+    implementation(libs.squareup.moshi.kotlin)
+    implementation(libs.squareup.retrofit2.converter.moshi)
 //    ksp(libs.squareup.moshi.kotlin.codegen)
 
 //    implementation(libs.koin.android)

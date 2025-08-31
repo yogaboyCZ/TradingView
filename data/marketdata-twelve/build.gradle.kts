@@ -17,18 +17,18 @@ fun Project.resolveApiKey(keyName: String): String {
 }
 
 android {
-    namespace = "cz.yogaboy.data.marketdata.alpha"
+    namespace = "cz.yogaboy.data.marketdata.twelvedata"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
         minSdk = 33
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
-
-    val apiKey = resolveApiKey("API_KEY_ALPHA")
+    val apiKey = resolveApiKey("API_KEY_TWELVE")
     if (apiKey.isBlank()) {
         throw GradleException(
             """
@@ -39,18 +39,17 @@ android {
         )
     }
     val apiKeyValue = "\"$apiKey\""
-
     flavorDimensions += "env"
     productFlavors {
         create("dev") {
             dimension = "env"
             buildConfigField("String", "API_KEY", apiKeyValue)
-            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
+            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
         }
         create("prod") {
             dimension = "env"
             buildConfigField("String", "API_KEY", apiKeyValue)
-            buildConfigField("String", "BASE_URI", "\"https://www.alphavantage.co/\"")
+            buildConfigField("String", "BASE_URI", "\"https://api.twelvedata.com/\"")
         }
     }
 

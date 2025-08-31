@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":domain:marketdata"))
     implementation(project(":data:marketdata-alpha"))
+    implementation(project(":data:marketdata-twelve"))
     implementation(project(":feature:home"))
     implementation(project(":feature:stocks"))
 

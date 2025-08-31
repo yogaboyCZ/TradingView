@@ -29,3 +29,4 @@ include(":data:marketdata-alpha")
 include(":feature:home")
 include(":feature:stocks")
 
+include(":data:marketdata-twelve")

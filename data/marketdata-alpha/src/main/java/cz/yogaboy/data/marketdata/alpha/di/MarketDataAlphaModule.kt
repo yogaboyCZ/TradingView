@@ -1,30 +1,37 @@
-// data/marketdata-alpha/src/main/java/.../di/AlphaNetworkModule.kt
 package cz.yogaboy.data.marketdata.alpha.di
 
-import com.squareup.moshi.Moshi
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import cz.yogaboy.data.marketdata.alpha.BuildConfig
 import cz.yogaboy.data.marketdata.alpha.network.AlphaVantageApi
-import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.data.marketdata.alpha.repository.AlphaMarketDataRepository
+import cz.yogaboy.domain.marketdata.MarketDataRepository
+import okhttp3.OkHttpClient
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
+import retrofit2.Converter
+import retrofit2.Retrofit
 
 val marketDataAlphaNetworkModule = module {
     single(named("alphaApiKey")) { BuildConfig.API_KEY }
 
-    // Reuse Moshi z core:
     single(named("alphaRetrofit")) {
-        val moshi: Moshi = get()
         Retrofit.Builder()
+            .client(get<OkHttpClient>())
             .baseUrl(BuildConfig.BASE_URI)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addConverterFactory(get<Converter.Factory>())
             .build()
+    }
+
+    single {
+        get<Retrofit>(named("alphaRetrofit")).create(AlphaVantageApi::class.java)
     }
 }
 
 val marketDataAlphaModule = module {
-    single { get<Retrofit>(named("alphaRetrofit")).create(AlphaVantageApi::class.java) }
-    single<MarketDataRepository> { AlphaMarketDataRepository(get(), get(named("alphaApiKey"))) }
+    single<MarketDataRepository>(named("alpha")) {
+        AlphaMarketDataRepository(
+            api = get(),
+            apiKey = get(named("alphaApiKey"))
+        )
+    }
+    single<MarketDataRepository> { get(named("alpha")) }
 }

@@ -1,4 +1,4 @@
-package cz.yogaboy.feature.stocks.testutil
+package cz.yogaboy.feature.stocks.presentation
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

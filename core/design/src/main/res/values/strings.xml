@@ -9,4 +9,5 @@
     <string name="stocks_error">Došlo k chybě</string>
     <string name="stocks_loading">Načítání…</string>
     <string name="stocks_errors">Betuska</string>
+    <string name="stocks_no_data">No data</string>
 </resources>

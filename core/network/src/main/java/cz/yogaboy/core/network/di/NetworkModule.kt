@@ -12,9 +12,10 @@ import cz.yogaboy.core.network.BuildConfig
 import retrofit2.Converter
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 val networkModule = module {
-    single { Moshi.Builder().build() }
+    single { Moshi.Builder().add(KotlinJsonAdapterFactory()).build() }
     single<Converter.Factory> { MoshiConverterFactory.create(get()) }
 
     single<Interceptor>(named("log")) {
