@@ -2,14 +2,14 @@ package cz.yogaboy.tv.nav
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import org.koin.compose.viewmodel.koinViewModel
 import cz.yogaboy.feature.home.presentation.*
 import cz.yogaboy.feature.stocks.presentation.StocksRoute
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeEntryScreen() {
     val vm: HomeViewModel = koinViewModel()
-    var query by rememberSaveable { mutableStateOf("") }
+    val state by vm.state.collectAsState()
     var selectedTicker by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
@@ -21,19 +21,8 @@ fun HomeEntryScreen() {
     }
 
     HomeScreen(
-        query = query,
-        onQueryChange = {
-            query = it
-            vm.handle(HomeEvent.QueryChanged(it))
-            if (it.isBlank()) selectedTicker = null
-        },
-        onSearch = { vm.handle(HomeEvent.Submit) },
-        onClearSearch = {
-            query = ""
-            vm.handle(HomeEvent.QueryChanged(""))
-            selectedTicker = null
-        },
-        showPlaceholder = selectedTicker == null,
+        state = state,
+        onEvent = { vm.handle(it) },
         content = { modifier ->
             selectedTicker?.let { ticker ->
                 StocksRoute(

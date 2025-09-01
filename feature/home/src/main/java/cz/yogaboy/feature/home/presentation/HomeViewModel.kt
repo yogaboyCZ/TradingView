@@ -2,71 +2,42 @@ package cz.yogaboy.feature.home.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cz.yogaboy.feature.home.domain.SearchSymbolsUseCase
-import cz.yogaboy.feature.home.domain.SymbolUi
-import cz.yogaboy.feature.home.domain.toUi
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-sealed interface HomeUiState {
-    data object Idle : HomeUiState
-    data object Loading : HomeUiState
-    data class Success(val items: List<SymbolUi>) : HomeUiState
-    data class Error(val message: String) : HomeUiState
+data class HomeState(
+    val query: String = "",
+    val showPlaceholder: Boolean = true
+)
+
+sealed interface HomeEvent {
+    data class QueryChanged(val value: String) : HomeEvent
+    data object Submit : HomeEvent
+    data object Clear : HomeEvent
 }
 
 sealed interface HomeEffect {
     data class NavigateToDetail(val ticker: String) : HomeEffect
 }
 
-sealed interface HomeEvent {
-    data class QueryChanged(val value: String) : HomeEvent
-    data object Submit : HomeEvent
-    data class Select(val item: SymbolUi) : HomeEvent
-}
+class HomeViewModel : ViewModel() {
+    private val _state = MutableStateFlow(HomeState())
+    val state: StateFlow<HomeState> = _state.asStateFlow()
 
-class HomeViewModel(
-    private val search: SearchSymbolsUseCase,
-    private val io: CoroutineDispatcher = Dispatchers.IO
-) : ViewModel() {
-
-    private val query = MutableStateFlow("")
-    private val submit = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    private val _effects = MutableSharedFlow<HomeEffect>()
+    private val _effects = MutableSharedFlow<HomeEffect>(extraBufferCapacity = 1)
     val effects: SharedFlow<HomeEffect> = _effects.asSharedFlow()
-
-//    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-//    val uiState: StateFlow<HomeUiState> =
-//        merge(
-//            query.debounce(400).distinctUntilChanged().map { it },
-//            submit.map { query.value }
-//        ).flatMapLatest { q ->
-//            flow {
-//                if (q.isBlank()) emit(HomeUiState.Idle)
-//                else {
-//                    emit(HomeUiState.Loading)
-//                    val result = search(q).map { it.toUi() }
-//                    emit(HomeUiState.Success(result))
-//                }
-//            }.catch { emit(HomeUiState.Error(it.message.orEmpty())) }
-//                .flowOn(io)
-//        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeUiState.Idle)
 
     fun handle(event: HomeEvent) {
         when (event) {
-            is HomeEvent.QueryChanged -> query.value = event.value
+            is HomeEvent.QueryChanged -> _state.update { it.copy(query = event.value) }
+            HomeEvent.Clear -> _state.value = HomeState()
             HomeEvent.Submit -> {
-                val q = query.value.trim()
+                val q = _state.value.query.trim()
                 if (q.isNotEmpty()) {
-                    submit.tryEmit(Unit)
+                    _state.update { it.copy(showPlaceholder = false) }
                     viewModelScope.launch { _effects.emit(HomeEffect.NavigateToDetail(q)) }
                 }
             }
-            is HomeEvent.Select -> viewModelScope.launch { }
         }
     }
 }

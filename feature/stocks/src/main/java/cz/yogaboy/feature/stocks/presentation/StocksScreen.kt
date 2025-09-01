@@ -16,9 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import cz.yogaboy.core.common.state.NetworkViewState
 import cz.yogaboy.core.design.LocalDimens
-import cz.yogaboy.feature.stocks.R
 import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
 import cz.yogaboy.feature.stocks.presentation.preview.StocksSuccessProvider
 import cz.yogaboy.core.design.R as DR
@@ -43,15 +41,14 @@ fun StocksScreen(
                 alphaState = state.alpha,
                 twelveState = state.twelve
             )
-
         }
     }
 }
 
 @Composable
 fun PriceSummaryCard(
-    alphaState: NetworkViewState<DisplayPrice>,
-    twelveState: NetworkViewState<DisplayPrice>,
+    alphaState: StocksUiState<DisplayPrice>,
+    twelveState: StocksUiState<DisplayPrice>,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -96,18 +93,13 @@ fun PriceSummaryCard(
 @Composable
 private fun ProviderStateBlock(
     provider: String,
-    state: NetworkViewState<DisplayPrice>,
+    state: StocksUiState<DisplayPrice>,
     content: @Composable (DisplayPrice) -> Unit
 ) {
     when (state) {
-        is NetworkViewState.Loading -> ProviderLoadingRow(provider)
-        is NetworkViewState.Error -> ProviderErrorRow(
-            provider,
-            message = state.uiErrorMessage ?: state.throwable.message
-            ?: stringResource(DR.string.unknown_error)
-        )
-
-        is NetworkViewState.Success -> content(state.value)
+        is StocksUiState.Loading -> ProviderLoadingRow(provider)
+        is StocksUiState.Error -> ProviderErrorRow(provider, message = state.message)
+        is StocksUiState.Data -> content(state.value)
     }
 }
 
@@ -226,8 +218,6 @@ private fun TwelveRow(
                         contentDescription = null,
                         tint = changeColor
                     )
-                    Text(stringResource(R.string.demo_count, 1))
-
                     Text(
                         text = "Change: $changeValue",
                         style = MaterialTheme.typography.bodyMedium,
