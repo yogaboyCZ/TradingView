@@ -1,4 +1,4 @@
-package cz.yogaboy.core.common
+package cz.yogaboy.core.common.state
 
 sealed class NetworkViewState<T> {
     data class Success<T>(val value: T) : NetworkViewState<T>()

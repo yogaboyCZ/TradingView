@@ -1,11 +1,12 @@
 package cz.yogaboy.feature.stocks.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cz.yogaboy.core.common.state.NetworkViewState
 import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
+import cz.yogaboy.feature.stocks.presentation.model.toDisplayPrice
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,15 +18,13 @@ import java.time.format.DateTimeParseException
 import java.util.Locale
 
 data class StocksState(
-    val loading: Boolean = false,
-    val alphaPrice: DisplayPrice? = null,
-    val twelvePrice: DisplayPrice? = null,
-    val error: String? = null
+    val alpha: NetworkViewState<DisplayPrice> = NetworkViewState.Loading(),
+    val twelve: NetworkViewState<DisplayPrice> = NetworkViewState.Loading()
 )
-
 
 sealed interface StocksEvent {
     object Refresh : StocksEvent
+    object Clear : StocksEvent
 }
 
 class StocksViewModel(
@@ -42,33 +41,32 @@ class StocksViewModel(
     fun handle(event: StocksEvent) {
         when (event) {
             StocksEvent.Refresh -> load()
+            StocksEvent.Clear -> _state.value = StocksState()
         }
     }
 
+    private fun <T, R> Result<T>.toViewState(map: (T) -> R): NetworkViewState<R> =
+        fold(
+            onSuccess = { NetworkViewState.Success(map(it)) },
+            onFailure = { NetworkViewState.Error(it, it.message) }
+        )
+
     private fun load() {
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, error = null) }
+            _state.update { it.copy(alpha = NetworkViewState.Loading(), twelve = NetworkViewState.Loading()) }
 
             val alphaDeferred = async { getAlpha(ticker) }
             val twelveDeferred = async { getTwelve(ticker) }
 
-            val alpha = alphaDeferred.await()
-            val twelve = twelveDeferred.await()
+            val alphaRes = alphaDeferred.await()
+            val twelveRes = twelveDeferred.await()
 
-            _state.update { s ->
-                s.copy(
-                    loading = false,
-                    alphaPrice = alpha.getOrNull()?.toDisplay(),
-                    twelvePrice = twelve.getOrNull()?.toDisplay(),
-                    error = when {
-                        alpha.isFailure && twelve.isFailure ->
-                            alpha.exceptionOrNull()?.message ?: twelve.exceptionOrNull()?.message
-                        else -> null
-                    }
+            _state.update { state ->
+                state.copy(
+                    alpha = alphaRes.toViewState { it.toDisplayPrice() },
+                    twelve = twelveRes.toViewState { it.toDisplayPrice() },
                 )
             }
-            //TODO use Timber for logging
-            Log.d("STOCKS", "LSY alpha=${alpha.getOrNull()}  twelve=${twelve.getOrNull()}")
         }
     }
 }

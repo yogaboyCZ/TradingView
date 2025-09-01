@@ -25,8 +25,14 @@ fun HomeEntryScreen() {
         onQueryChange = {
             query = it
             vm.handle(HomeEvent.QueryChanged(it))
+            if (it.isBlank()) selectedTicker = null
         },
         onSearch = { vm.handle(HomeEvent.Submit) },
+        onClearSearch = {
+            query = ""
+            vm.handle(HomeEvent.QueryChanged(""))
+            selectedTicker = null
+        },
         showPlaceholder = selectedTicker == null,
         content = { modifier ->
             selectedTicker?.let { ticker ->

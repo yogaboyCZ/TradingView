@@ -11,5 +11,11 @@
     <string name="stocks_errors">Betuska</string>
     <string name="stocks_no_data">No data</string>
     <string name="twelve_data_provider">TwelveData</string>
+    <string name="stocks_change">Změna: %1$s</string>
+    <string name="stocks_previous_close">Předchozí závěr: 1$s</string>
+    <string name="stocks_price_ticker">Cena %1$s: %2$s</string>
     <string name="alpha_vantage_provider">AlphaVantage</string>
+    <string name="stocks_price_title">Aktuální cena</string>
+    <string name="unknown_error">Neznámá chyba</string>
+    <string name="demo_count">Počet: %1$d</string>
 </resources>

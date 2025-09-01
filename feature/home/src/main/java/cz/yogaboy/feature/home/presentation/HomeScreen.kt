@@ -33,6 +33,7 @@ fun HomeScreen(
     query: String,
     onQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onClearSearch: () -> Unit,
     showPlaceholder: Boolean,
     content: @Composable (Modifier) -> Unit = {},
     modifier: Modifier = Modifier
@@ -79,7 +80,10 @@ fun HomeScreen(
                         value = query,
                         onValueChange = onQueryChange,
                         onSearch = { if (query.isNotBlank()) onSearch() },
-                        onClear = { onQueryChange("") }
+                        onClear = {
+                            onQueryChange("")
+                            onClearSearch()
+                        }
                     )
                 }
             }
@@ -224,6 +228,7 @@ fun HomeScreenPreview() {
         query = "",
         onQueryChange = {},
         onSearch = {},
+        onClearSearch = {},
         showPlaceholder = true
     )
 }
