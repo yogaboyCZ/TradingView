@@ -12,9 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.extension.RegisterExtension
 
 private class FakeRepo(private val block: (String) -> Price?) : MarketDataRepository {
@@ -41,8 +39,8 @@ class StocksViewModelTest {
     }
 
     @Test
-    fun `emits loading then both prices on double success`() = runTest(mainDispatcher.dispatcher()) {
-        val alphaP = Price("AAPL", 227.76, 2.86, 1.2717, 224.9, "2025-08-22")
+    fun `emits Loading then Data for both providers on success`() = runTest(mainDispatcher.dispatcher()) {
+        val alphaP = Price("AAPL", 227.76, 2.86, 1.2717, 224.9, "2025-08-22", name = "Apple Inc.")
         val twelveP = Price("AAPL", 227.70)
 
         val getAlpha = GetLatestPriceUseCase(FakeRepo { alphaP })
@@ -51,73 +49,75 @@ class StocksViewModelTest {
         val vm = StocksViewModel(getAlpha = getAlpha, getTwelve = getTwelve, ticker = "AAPL")
 
         vm.state.test {
-            assertEquals(StocksState(), awaitItem())
+            // initial state (both Loading by default)
+            val initial = awaitItem()
+            assertTrue(initial.alpha is StocksUiState.Loading)
+            assertTrue(initial.twelve is StocksUiState.Loading)
 
+            // wait for load()
             advanceUntilIdle()
-            val loading = awaitItem()
-            assertTrue(loading.loading)
-            assertNull(loading.error)
-            assertNull(loading.alphaPrice)
-            assertNull(loading.twelvePrice)
 
-            advanceUntilIdle()
             val done = awaitItem()
-            assertFalse(done.loading)
-            assertEquals(alphaP, done.alphaPrice)
-            assertEquals(twelveP, done.twelvePrice)
-            assertNull(done.error)
+            val alpha = done.alpha as StocksUiState.Data
+            val twelve = done.twelve as StocksUiState.Data
+
+            assertEquals("AAPL", alpha.value.ticker)
+            assertEquals(227.76, alpha.value.last, 0.0001)
+            assertEquals("AAPL", twelve.value.ticker)
+            assertEquals(227.70, twelve.value.last, 0.0001)
 
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `emits loading then single price when one provider fails`() = runTest(mainDispatcher.dispatcher()) {
+    fun `emits Loading then Data for one provider and Error for the other`() = runTest(mainDispatcher.dispatcher()) {
         val twelveP = Price("MSFT", 506.69)
 
-        val getAlpha = GetLatestPriceUseCase(FakeRepo { null })     // fail
-        val getTwelve = GetLatestPriceUseCase(FakeRepo { twelveP }) // success
+        val getAlpha = GetLatestPriceUseCase(FakeRepo { null })      // fail
+        val getTwelve = GetLatestPriceUseCase(FakeRepo { twelveP })  // success
 
         val vm = StocksViewModel(getAlpha = getAlpha, getTwelve = getTwelve, ticker = "MSFT")
 
         vm.state.test {
-            assertEquals(StocksState(), awaitItem())
+            val initial = awaitItem()
+            assertTrue(initial.alpha is StocksUiState.Loading)
+            assertTrue(initial.twelve is StocksUiState.Loading)
 
             advanceUntilIdle()
-            val loading = awaitItem()
-            assertTrue(loading.loading)
 
-            advanceUntilIdle()
             val done = awaitItem()
-            assertFalse(done.loading)
-            assertNull(done.alphaPrice)
-            assertEquals(twelveP, done.twelvePrice)
-            assertNull(done.error)
+            assertTrue(done.alpha is StocksUiState.Error)
+            val twelve = done.twelve as StocksUiState.Data
+            assertEquals("MSFT", twelve.value.ticker)
+            assertEquals(506.69, twelve.value.last, 0.0001)
 
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `emits loading then error when both providers fail`() = runTest(mainDispatcher.dispatcher()) {
+    fun `emits Loading then Error for both providers on double failure`() = runTest(mainDispatcher.dispatcher()) {
         val getAlpha = GetLatestPriceUseCase(FakeRepo { null })
         val getTwelve = GetLatestPriceUseCase(FakeRepo { null })
 
         val vm = StocksViewModel(getAlpha = getAlpha, getTwelve = getTwelve, ticker = "NVDA")
 
         vm.state.test {
-            assertEquals(StocksState(), awaitItem())
+            val initial = awaitItem()
+            assertTrue(initial.alpha is StocksUiState.Loading)
+            assertTrue(initial.twelve is StocksUiState.Loading)
 
             advanceUntilIdle()
-            val loading = awaitItem()
-            assertTrue(loading.loading)
 
-            advanceUntilIdle()
             val done = awaitItem()
-            assertFalse(done.loading)
-            assertNull(done.alphaPrice)
-            assertNull(done.twelvePrice)
-            assertEquals("No price for NVDA", done.error)
+            assertTrue(done.alpha is StocksUiState.Error)
+            assertTrue(done.twelve is StocksUiState.Error)
+
+            val alphaErr = done.alpha as StocksUiState.Error
+            val twelveErr = done.twelve as StocksUiState.Error
+            assertTrue(alphaErr.message.isNotBlank())
+            assertTrue(twelveErr.message.isNotBlank())
 
             cancelAndIgnoreRemainingEvents()
         }
