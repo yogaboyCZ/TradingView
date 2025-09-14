@@ -37,15 +37,15 @@ class StocksViewModel(
     private val ticker: String
 ) : ViewModel() {
 
-    private val refreshTrigger = MutableSharedFlow<Unit>(replay = 1)
+    private val loadEvents = MutableSharedFlow<Unit>(replay = 1)
 
     init {
-        refreshTrigger.tryEmit(Unit)
+        loadEvents.tryEmit(Unit)
     }
 
     private val alphaState: StateFlow<StocksUiState<DisplayPrice>> =
         with(this) {
-            refreshTrigger.flatMapLatest {
+            loadEvents.flatMapLatest {
                 flow {
                     emit(StocksUiState.Loading)
                     yield()
@@ -62,7 +62,7 @@ class StocksViewModel(
 
     private val twelveState: StateFlow<StocksUiState<DisplayPrice>> =
         with(this) {
-            refreshTrigger.flatMapLatest {
+            loadEvents.flatMapLatest {
                 flow {
                     emit(StocksUiState.Loading)
                     yield()
@@ -86,7 +86,7 @@ class StocksViewModel(
 
     fun handle(event: StocksEvent) {
         when (event) {
-            StocksEvent.Refresh -> refreshTrigger.tryEmit(Unit)
+            StocksEvent.Refresh -> loadEvents.tryEmit(Unit)
         }
     }
 }
