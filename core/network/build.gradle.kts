@@ -3,7 +3,6 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.serialization)
-//    alias(libs.plugins.com.google.devtools.ksp)
 }
 
 fun Project.resolveApiKey(keyName: String): String {

@@ -30,8 +30,15 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.koin.compose.viewmodel)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 }

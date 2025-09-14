@@ -1,20 +1,19 @@
 package cz.yogaboy.feature.stocks.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import cz.yogaboy.domain.marketdata.Price
+import cz.yogaboy.core.common.flow.stateInWhileSubscribed
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
+import cz.yogaboy.feature.stocks.presentation.model.toDisplayPrice
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.util.Locale
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.yield
 
 sealed interface StocksUiState<out T> {
     data object Loading : StocksUiState<Nothing>
@@ -31,74 +30,63 @@ sealed interface StocksEvent {
     object Refresh : StocksEvent
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class StocksViewModel(
     private val getAlpha: GetLatestPriceUseCase,
     private val getTwelve: GetLatestPriceUseCase,
     private val ticker: String
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(StocksState())
-    val state: StateFlow<StocksState> = _state
+    private val refreshTrigger = MutableSharedFlow<Unit>(replay = 1)
 
     init {
-        load()
+        refreshTrigger.tryEmit(Unit)
     }
+
+    private val alphaState: StateFlow<StocksUiState<DisplayPrice>> =
+        with(this) {
+            refreshTrigger.flatMapLatest {
+                flow {
+                    emit(StocksUiState.Loading)
+                    yield()
+                    val res = getAlpha(ticker)
+                    emit(
+                        res.fold(
+                            onSuccess = { StocksUiState.Data(it.toDisplayPrice()) },
+                            onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
+                        )
+                    )
+                }.flowOn(Dispatchers.IO)
+            }.stateInWhileSubscribed(StocksUiState.Loading)
+        }
+
+    private val twelveState: StateFlow<StocksUiState<DisplayPrice>> =
+        with(this) {
+            refreshTrigger.flatMapLatest {
+                flow {
+                    emit(StocksUiState.Loading)
+                    yield()
+                    val res = getTwelve(ticker)
+                    emit(
+                        res.fold(
+                            onSuccess = { StocksUiState.Data(it.toDisplayPrice()) },
+                            onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
+                        )
+                    )
+                }.flowOn(Dispatchers.IO)
+            }.stateInWhileSubscribed(StocksUiState.Loading)
+        }
+
+    val state: StateFlow<StocksState> =
+        with(this) {
+            combine(alphaState, twelveState) { a, t ->
+                StocksState(alpha = a, twelve = t)
+            }.stateInWhileSubscribed(StocksState())
+        }
 
     fun handle(event: StocksEvent) {
         when (event) {
-            StocksEvent.Refresh -> load()
-        }
-    }
-
-    private fun <T, R> Result<T>.toUi(map: (T) -> R): StocksUiState<R> =
-        fold(
-            onSuccess = { StocksUiState.Data(map(it)) },
-            onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
-        )
-
-    private fun load() {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    alpha = StocksUiState.Loading,
-                    twelve = StocksUiState.Loading
-                )
-            }
-
-            val alphaDeferred = async { getAlpha(ticker) }
-            val twelveDeferred = async { getTwelve(ticker) }
-
-            val alphaRes = alphaDeferred.await()
-            val twelveRes = twelveDeferred.await()
-
-            _state.update { s ->
-                s.copy(
-                    alpha = alphaRes.toUi { it.toDisplay() },
-                    twelve = twelveRes.toUi { it.toDisplay() },
-                )
-            }
-
-            Log.d("STOCKS", "alpha=${alphaRes.getOrNull()}  twelve=${twelveRes.getOrNull()}")
+            StocksEvent.Refresh -> refreshTrigger.tryEmit(Unit)
         }
     }
 }
-
-private val IN_FMT = DateTimeFormatter.ISO_LOCAL_DATE
-private val OUT_FMT = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale("cs", "CZ"))
-
-fun Price.toDisplay(): DisplayPrice =
-    DisplayPrice(
-        ticker = ticker,
-        last = last,
-        change = change,
-        changePercent = changePercent,
-        previousClose = previousClose,
-        name = name,
-        asOf = asOf?.let { raw ->
-            try {
-                LocalDate.parse(raw, IN_FMT).format(OUT_FMT)
-            } catch (_: DateTimeParseException) {
-                raw
-            }
-        }
-    )
