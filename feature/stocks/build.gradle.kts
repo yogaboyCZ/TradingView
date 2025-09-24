@@ -36,6 +36,12 @@ tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+}
+
 dependencies {
     implementation(project(":domain:marketdata"))
     implementation(project(":core:common"))
