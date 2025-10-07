@@ -1,3 +1,5 @@
+includeBuild("build-logic")
+
 pluginManagement {
     repositories {
         google {
@@ -9,6 +11,11 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+    }
+    plugins {
+        id("com.android.application") version "8.13.0"
+        id("com.android.library") version "8.13.0"
+        id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
     }
 }
 dependencyResolutionManagement {
