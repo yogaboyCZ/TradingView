@@ -5,6 +5,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 plugins {
+    alias(libs.plugins.android.library)
     id("tradingview.android-library")
 }
 

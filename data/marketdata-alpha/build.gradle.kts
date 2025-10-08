@@ -1,8 +1,7 @@
 import java.util.Properties
-import kotlin.apply
 
 plugins {
-    alias(libs.plugins.android.library)
+    id("tradingview.android-library")
 }
 
 fun Project.resolveApiKey(keyName: String): String {
@@ -18,15 +17,6 @@ fun Project.resolveApiKey(keyName: String): String {
 
 android {
     namespace = "cz.yogaboy.data.marketdata.alpha"
-    compileSdk {
-        version = release(36)
-    }
-
-    defaultConfig {
-        minSdk = 33
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
 
     val apiKey = resolveApiKey("API_KEY_ALPHA")
     if (apiKey.isBlank()) {
@@ -62,10 +52,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures { buildConfig = true }
 }

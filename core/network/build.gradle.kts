@@ -1,8 +1,7 @@
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.serialization)
+    id("tradingview.android-library")
 }
 
 fun Project.resolveApiKey(keyName: String): String {
@@ -18,13 +17,7 @@ fun Project.resolveApiKey(keyName: String): String {
 
 android {
     namespace = "cz.yogaboy.core.network"
-    compileSdk = 36
 
-    defaultConfig {
-        minSdk = 33
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
 
     val apiKey = resolveApiKey("API_KEY_ALPHA")
     if (apiKey.isBlank()) { throw GradleException(
@@ -63,10 +56,6 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
     buildFeatures { buildConfig = true }
 }
 
