@@ -1,11 +1,10 @@
 [versions]
 
 # Project
-namespace = "cz.csas.app.espisodvoz"
+namespace = "cz.yogaboy.tradingview"
 minSdk = "26"
 targetSdk = "36"
 compileSdk = "36"
-composeCompilerVersion = "1.5.3"
 
 agp = "9.0.0-alpha09"
 kotlin = "2.2.20"

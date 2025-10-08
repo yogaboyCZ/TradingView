@@ -5,14 +5,14 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
 class TradingviewComposeConventionsPlugin : Plugin<Project> {
-    override fun apply(target: Project) {
-        target.pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
+    override fun apply(project: Project) {
+        project.pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
 
-        target.pluginManager.withPlugin("com.android.library") {
-            target.extensions.configure<LibraryExtension> {
+        project.pluginManager.withPlugin("com.android.library") {
+            project.extensions.configure<LibraryExtension> {
                 buildFeatures { compose = true }
             }
-            target.dependencies {
+            project.dependencies {
                 add("implementation", platform("androidx.compose:compose-bom:2025.09.00"))
                 add("implementation", "androidx.compose.ui:ui")
                 add("implementation", "androidx.compose.material3:material3")
