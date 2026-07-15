@@ -13,6 +13,7 @@ class TradingviewAndroidLibraryPlugin : Plugin<Project> {
 
         project.tasks.withType(KotlinCompile::class.java).configureEach {
             compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+            compilerOptions.freeCompilerArgs.add("-Xexplicit-backing-fields")
         }
     }
 

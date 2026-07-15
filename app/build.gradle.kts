@@ -43,6 +43,12 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xexplicit-backing-fields")
+    }
+}
+
 dependencies {
     implementation(project(":core:design"))
     implementation(project(":core:network"))

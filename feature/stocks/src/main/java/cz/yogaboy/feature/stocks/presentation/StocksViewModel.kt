@@ -5,16 +5,15 @@ import cz.yogaboy.core.common.flow.stateInWhileSubscribed
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
 import cz.yogaboy.feature.stocks.presentation.model.toDisplayPrice
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.yield
 
 sealed interface StocksUiState<out T> {
     data object Loading : StocksUiState<Nothing>
@@ -47,18 +46,21 @@ class StocksViewModel(
             refreshEvents
                 .onStart { emit(Unit) }
                 .flatMapLatest {
-                flow {
-                    emit(StocksUiState.Loading)
-                    yield()
-                    val res = getAlpha(ticker)
-                    emit(
-                        res.fold(
-                            onSuccess = { StocksUiState.Data(it.toDisplayPrice()) },
-                            onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
+                    flow {
+                        emit(StocksUiState.Loading)
+                        val result = getAlpha(ticker)
+                        emit(
+                            result.fold(
+                                onSuccess = { StocksUiState.Data(it.toDisplayPrice()) },
+                                onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
+                            )
                         )
-                    )
-                }.flowOn(Dispatchers.IO)
-            }.stateInWhileSubscribed(StocksUiState.Loading)
+                    }.catch { exception ->
+                        if (exception is CancellationException) throw exception
+                        emit(StocksUiState.Error(exception.message ?: "Unknown error"))
+                    }
+                }
+                .stateInWhileSubscribed(StocksUiState.Loading)
         }
 
     private val twelveState: StateFlow<StocksUiState<DisplayPrice>> =
@@ -66,18 +68,21 @@ class StocksViewModel(
             refreshEvents
                 .onStart { emit(Unit) }
                 .flatMapLatest {
-                flow {
-                    emit(StocksUiState.Loading)
-                    yield()
-                    val res = getTwelve(ticker)
-                    emit(
-                        res.fold(
-                            onSuccess = { StocksUiState.Data(it.toDisplayPrice()) },
-                            onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
+                    flow {
+                        emit(StocksUiState.Loading)
+                        val result = getTwelve(ticker)
+                        emit(
+                            result.fold(
+                                onSuccess = { StocksUiState.Data(it.toDisplayPrice()) },
+                                onFailure = { StocksUiState.Error(it.message ?: "Unknown error") }
+                            )
                         )
-                    )
-                }.flowOn(Dispatchers.IO)
-            }.stateInWhileSubscribed(StocksUiState.Loading)
+                    }.catch { exception ->
+                        if (exception is CancellationException) throw exception
+                        emit(StocksUiState.Error(exception.message ?: "Unknown error"))
+                    }
+                }
+                .stateInWhileSubscribed(StocksUiState.Loading)
         }
 
     val state: StateFlow<StocksState> =

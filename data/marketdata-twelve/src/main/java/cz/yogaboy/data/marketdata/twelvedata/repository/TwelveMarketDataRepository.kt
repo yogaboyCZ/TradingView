@@ -6,6 +6,7 @@ import cz.yogaboy.data.marketdata.twelvedata.network.TwelveDataApi
 import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.domain.marketdata.Price
 import org.json.JSONObject
+import java.util.concurrent.CancellationException
 
 class TwelveMarketDataRepository(
     private val api: TwelveDataApi,
@@ -21,8 +22,10 @@ class TwelveMarketDataRepository(
                 val last = JSONObject(body).optString("price", "error").toDoubleOrNull()
                 last?.let { Price(ticker = ticker, last = it) }
             }
-    } catch (t: Throwable) {
-        Log.w("TwelveMarketDataRepo", "Failed to fetch price for $ticker", t)
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Exception) {
+        Log.w("TwelveMarketDataRepo", "Failed to fetch price for $ticker", exception)
         null
     }
 }

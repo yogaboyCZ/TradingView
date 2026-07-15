@@ -10,18 +10,21 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import java.io.IOException
 
 private class FakeRepo(private val block: (String) -> Price?) : MarketDataRepository {
     override suspend fun getLatestPrice(ticker: String): Price? = block(ticker)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class StocksViewModelTest {
+class CancellationException {
 
     @JvmField
     @RegisterExtension
@@ -89,6 +92,52 @@ class StocksViewModelTest {
             val twelve = done.twelve as StocksUiState.Data
             assertEquals("MSFT", twelve.value.ticker)
             assertEquals(506.69, twelve.value.last, 0.0001)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `converts repository exception to provider Error state`() = runTest(mainDispatcher.dispatcher()) {
+        val getAlpha = GetLatestPriceUseCase(FakeRepo { throw IOException("Network unavailable") })
+        val getTwelve = GetLatestPriceUseCase(FakeRepo { Price("AAPL", 227.70) })
+        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL")
+
+        vm.state.test {
+            awaitItem() // initial Loading/Loading
+
+            val done = awaitNonLoading()
+            val alpha = done.alpha as StocksUiState.Error
+            assertEquals("Network unavailable", alpha.message)
+            assertTrue(done.twelve is StocksUiState.Data)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `refresh recovers after repository exception`() = runTest(mainDispatcher.dispatcher()) {
+        var alphaCalls = 0
+        val getAlpha = GetLatestPriceUseCase(
+            FakeRepo {
+                alphaCalls++
+                if (alphaCalls == 1) throw IOException("Temporary failure")
+                Price("AAPL", 228.10)
+            }
+        )
+        val getTwelve = GetLatestPriceUseCase(FakeRepo { Price("AAPL", 227.70) })
+        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL")
+
+        vm.state.test {
+            awaitItem() // initial Loading/Loading
+            assertTrue(awaitNonLoading().alpha is StocksUiState.Error)
+
+            vm.handle(StocksEvent.Refresh)
+
+            val recovered = awaitNonLoading()
+            val alpha = recovered.alpha as StocksUiState.Data
+            assertEquals(228.10, alpha.value.last, 0.0001)
+            assertEquals(2, alphaCalls)
 
             cancelAndIgnoreRemainingEvents()
         }

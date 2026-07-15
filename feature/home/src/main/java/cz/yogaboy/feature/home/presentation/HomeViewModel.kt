@@ -21,21 +21,22 @@ sealed interface HomeEffect {
 }
 
 class HomeViewModel : ViewModel() {
-    private val _state = MutableStateFlow(HomeState())
-    val state: StateFlow<HomeState> = _state.asStateFlow()
+    val state: StateFlow<HomeState>
+        field: MutableStateFlow<HomeState> = MutableStateFlow(HomeState())
 
-    private val _effects = MutableSharedFlow<HomeEffect>(extraBufferCapacity = 1)
-    val effects: SharedFlow<HomeEffect> = _effects.asSharedFlow()
+    val effects: SharedFlow<HomeEffect>
+        field: MutableSharedFlow<HomeEffect> =
+            MutableSharedFlow(extraBufferCapacity = 1)
 
     fun handle(event: HomeEvent) {
         when (event) {
-            is HomeEvent.QueryChanged -> _state.update { it.copy(query = event.value) }
-            HomeEvent.Clear -> _state.value = HomeState()
+            is HomeEvent.QueryChanged -> state.update { it.copy(query = event.value) }
+            HomeEvent.Clear -> state.value = HomeState()
             HomeEvent.Submit -> {
-                val q = _state.value.query.trim()
+                val q = state.value.query.trim()
                 if (q.isNotEmpty()) {
-                    _state.update { it.copy(showPlaceholder = false) }
-                    viewModelScope.launch { _effects.emit(HomeEffect.NavigateToDetail(q)) }
+                    state.update { it.copy(showPlaceholder = false) }
+                    viewModelScope.launch { effects.emit(HomeEffect.NavigateToDetail(q)) }
                 }
             }
         }
