@@ -8,13 +8,12 @@ import cz.yogaboy.feature.stocks.presentation.model.toDisplayPrice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.yield
 
 sealed interface StocksUiState<out T> {
@@ -39,16 +38,15 @@ class StocksViewModel(
     private val ticker: String
 ) : ViewModel() {
 
-    private val _loadEvents = MutableSharedFlow<Unit>(replay = 1)
-    internal val loadEvents: SharedFlow<Unit> = _loadEvents.asSharedFlow()
-
-    init {
-        _loadEvents.tryEmit(Unit)
-    }
+    // Refresh is an event, not state: do not replay an old refresh when the UI subscribes again.
+    // Each provider performs its initial load through onStart below.
+    private val refreshEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val alphaState: StateFlow<StocksUiState<DisplayPrice>> =
         with(this) {
-            loadEvents.flatMapLatest {
+            refreshEvents
+                .onStart { emit(Unit) }
+                .flatMapLatest {
                 flow {
                     emit(StocksUiState.Loading)
                     yield()
@@ -65,7 +63,9 @@ class StocksViewModel(
 
     private val twelveState: StateFlow<StocksUiState<DisplayPrice>> =
         with(this) {
-            loadEvents.flatMapLatest {
+            refreshEvents
+                .onStart { emit(Unit) }
+                .flatMapLatest {
                 flow {
                     emit(StocksUiState.Loading)
                     yield()
@@ -89,7 +89,7 @@ class StocksViewModel(
 
     fun handle(event: StocksEvent) {
         when (event) {
-            StocksEvent.Refresh -> _loadEvents.tryEmit(Unit)
+            StocksEvent.Refresh -> refreshEvents.tryEmit(Unit)
         }
     }
 }
