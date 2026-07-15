@@ -8,7 +8,9 @@ import cz.yogaboy.feature.stocks.presentation.model.toDisplayPrice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -37,10 +39,11 @@ class StocksViewModel(
     private val ticker: String
 ) : ViewModel() {
 
-    private val loadEvents = MutableSharedFlow<Unit>(replay = 1)
+    private val _loadEvents = MutableSharedFlow<Unit>(replay = 1)
+    internal val loadEvents: SharedFlow<Unit> = _loadEvents.asSharedFlow()
 
     init {
-        loadEvents.tryEmit(Unit)
+        _loadEvents.tryEmit(Unit)
     }
 
     private val alphaState: StateFlow<StocksUiState<DisplayPrice>> =
@@ -86,7 +89,7 @@ class StocksViewModel(
 
     fun handle(event: StocksEvent) {
         when (event) {
-            StocksEvent.Refresh -> loadEvents.tryEmit(Unit)
+            StocksEvent.Refresh -> _loadEvents.tryEmit(Unit)
         }
     }
 }
