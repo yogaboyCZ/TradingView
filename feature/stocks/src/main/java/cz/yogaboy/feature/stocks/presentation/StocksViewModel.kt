@@ -29,7 +29,7 @@ data class StocksState(
 )
 
 sealed interface StocksEvent {
-    object Refresh : StocksEvent
+    data object Refresh : StocksEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
