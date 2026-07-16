@@ -11,6 +11,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun StocksRoute(
     ticker: String,
     onBackClick: () -> Unit,
+    showBackNavigation: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val vm: StocksViewModel = koinViewModel(
@@ -19,9 +20,11 @@ fun StocksRoute(
     )
     val state by vm.state.collectAsStateWithLifecycle()
     StocksScreen(
+        ticker = ticker,
         state = state,
         onClick = vm::handle,
         onBackClick = onBackClick,
+        showBackNavigation = showBackNavigation,
         modifier = modifier
     )
 }

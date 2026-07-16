@@ -7,11 +7,11 @@ import kotlinx.coroutines.launch
 
 data class HomeState(
     val query: String = "",
-    val showPlaceholder: Boolean = true
 )
 
 sealed interface HomeEvent {
     data class QueryChanged(val value: String) : HomeEvent
+    data class ProductSelected(val ticker: String) : HomeEvent
     data object Submit : HomeEvent
     data object Clear : HomeEvent
 }
@@ -32,13 +32,19 @@ class HomeViewModel : ViewModel() {
         when (event) {
             is HomeEvent.QueryChanged -> state.update { it.copy(query = event.value) }
             HomeEvent.Clear -> state.value = HomeState()
+            is HomeEvent.ProductSelected -> navigateToDetail(event.ticker)
             HomeEvent.Submit -> {
                 val q = state.value.query.trim()
                 if (q.isNotEmpty()) {
-                    state.update { it.copy(showPlaceholder = false) }
-                    viewModelScope.launch { effects.emit(HomeEffect.NavigateToDetail(q)) }
+                    navigateToDetail(q)
                 }
             }
+        }
+    }
+
+    private fun navigateToDetail(ticker: String) {
+        viewModelScope.launch {
+            effects.emit(HomeEffect.NavigateToDetail(ticker.trim().uppercase()))
         }
     }
 }

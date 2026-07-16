@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.*
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,25 +23,69 @@ import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
 import cz.yogaboy.feature.stocks.presentation.preview.StocksSuccessProvider
 import cz.yogaboy.core.design.R as DR
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StocksScreen(
+    ticker: String,
     state: StocksState,
     onClick: (StocksEvent) -> Unit,
     onBackClick: () -> Unit,
+    showBackNavigation: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    Surface(color = Color.Transparent, contentColor = MaterialTheme.colorScheme.onPrimary) {
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary,
+                    )
+                )
+            ),
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = ticker.uppercase(),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                },
+                navigationIcon = {
+                    if (showBackNavigation) {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Zpět",
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onTertiary,
+                    titleContentColor = MaterialTheme.colorScheme.onTertiary,
+                ),
+            )
+        },
+    ) { contentPadding ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = LocalDimens.current.default),
+                .padding(contentPadding)
+                .padding(
+                    horizontal = LocalDimens.current.default,
+                    vertical = LocalDimens.current.medium,
+                ),
             verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(LocalDimens.current.medium))
             PriceSummaryCard(
                 alphaState = state.alpha,
-                twelveState = state.twelve
+                twelveState = state.twelve,
             )
         }
     }
@@ -245,8 +291,9 @@ private fun StocksScreenPreview(
     state: StocksState
 ) {
     StocksScreen(
+        ticker = "AAPL",
         state = state,
         onClick = {},
-        onBackClick = {}
+        onBackClick = {},
     )
 }
