@@ -15,5 +15,16 @@ fun GlobalQuoteEnvelope.toDomain(fallbackTicker: String? = null): Price? {
     val changePct = q.changePercent?.removeSuffix("%")?.toDoubleOrNull()
     val prevClose = q.previousClose?.toDoubleOrNull()
     val asOf = q.latestTradingDay
-    return Price(ticker, last, change, changePct, prevClose, asOf)
+    return Price(
+        ticker = ticker,
+        last = last,
+        open = q.open?.toDoubleOrNull(),
+        high = q.high?.toDoubleOrNull(),
+        low = q.low?.toDoubleOrNull(),
+        volume = q.volume?.toLongOrNull(),
+        change = change,
+        changePercent = changePct,
+        previousClose = prevClose,
+        asOf = asOf,
+    )
 }

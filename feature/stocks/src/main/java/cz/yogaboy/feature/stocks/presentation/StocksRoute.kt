@@ -12,6 +12,7 @@ fun StocksRoute(
     ticker: String,
     onBackClick: () -> Unit,
     showBackNavigation: Boolean = true,
+    drawBackground: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val vm: StocksViewModel = koinViewModel(
@@ -25,6 +26,7 @@ fun StocksRoute(
         onClick = vm::handle,
         onBackClick = onBackClick,
         showBackNavigation = showBackNavigation,
+        drawBackground = drawBackground,
         modifier = modifier
     )
 }

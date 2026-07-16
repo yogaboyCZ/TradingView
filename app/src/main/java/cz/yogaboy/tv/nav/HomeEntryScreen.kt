@@ -11,6 +11,7 @@ import cz.yogaboy.feature.home.presentation.*
 fun HomeEntryScreen(
     onNavigateToDetail: (String) -> Unit,
     supportingPane: Boolean = false,
+    drawBackground: Boolean = true,
 ) {
     val vm: HomeViewModel = koinViewModel()
     val state by vm.state.collectAsState()
@@ -27,5 +28,6 @@ fun HomeEntryScreen(
         state = state,
         onEvent = { vm.handle(it) },
         supportingPane = supportingPane,
+        drawBackground = drawBackground,
     )
 }

@@ -8,11 +8,19 @@ fun Price.toDisplayPrice(name: String? = null): DisplayPrice =
     DisplayPrice(
         ticker = ticker,
         last = last,
+        open = open,
+        high = high,
+        low = low,
+        volume = volume,
         change = change,
         changePercent = changePercent,
         previousClose = previousClose,
         asOf = asOf?.let(::formatAsCzDate),
-        name = name
+        name = name ?: this.name,
+        currency = currency,
+        exchange = exchange,
+        micCode = micCode,
+        instrumentType = instrumentType,
     )
 
 private fun formatAsCzDate(iso: String): String = try {

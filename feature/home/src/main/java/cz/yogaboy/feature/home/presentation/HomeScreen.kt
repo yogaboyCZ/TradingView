@@ -1,13 +1,15 @@
 package cz.yogaboy.feature.home.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +18,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,12 +35,16 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cz.yogaboy.core.design.LocalDimens
+import cz.yogaboy.core.design.AuroraBackground
+import cz.yogaboy.core.design.FrostedSurface
 import cz.yogaboy.core.design.R as DR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,47 +53,70 @@ fun HomeScreen(
     state: HomeState,
     onEvent: (HomeEvent) -> Unit,
     supportingPane: Boolean = false,
+    drawBackground: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.tertiary
-                    )
-                )
+    val density = LocalDensity.current
+    var headerHeightPx by remember(density) {
+        mutableIntStateOf(with(density) { 190.dp.roundToPx() })
+    }
+    val headerHeight = with(density) { headerHeightPx.toDp() }
+
+    val content: @Composable () -> Unit = {
+        Box(Modifier.fillMaxSize()) {
+            SuggestedProducts(
+                onProductClick = { onEvent(HomeEvent.ProductSelected(it.ticker)) },
+                supportingPane = supportingPane,
+                modifier = Modifier.fillMaxSize(),
+                topContentPadding = headerHeight + LocalDimens.current.small,
             )
-    ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .onSizeChanged { headerHeightPx = it.height },
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xF20A1742),
+                                    Color(0xD90E2258),
+                                    Color(0xA60D2B67),
+                                    Color.Transparent,
+                                ),
+                            ),
+                        ),
+                ) {
                 Column(
                     Modifier
                         .fillMaxWidth()
+                        .windowInsetsPadding(WindowInsets.statusBars)
                         .padding(
-                            horizontal = LocalDimens.current.medium,
-                            vertical = LocalDimens.current.small,
-                        )
+                            start = LocalDimens.current.medium,
+                            end = LocalDimens.current.medium,
+                            top = LocalDimens.current.tiny,
+                            bottom = 24.dp,
+                        ),
                 ) {
                     TopAppBar(
                         title = {
                             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                 Text(
                                     text = stringResource(DR.string.home_title),
-                                    color = MaterialTheme.colorScheme.onTertiary,
+                                    color = Color.White,
                                 )
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
-                            titleContentColor = if (isSystemInDarkTheme())
-                                MaterialTheme.colorScheme.onPrimary else Color.Black
+                            titleContentColor = Color.White,
                         )
                     )
-                    Spacer(Modifier.height(LocalDimens.current.medium))
+                    Spacer(Modifier.height(LocalDimens.current.small))
 
                     TopSearchBar(
                         value = state.query,
@@ -89,16 +125,15 @@ fun HomeScreen(
                         onClear = { onEvent(HomeEvent.Clear) }
                     )
                 }
+                }
             }
-        ) { padding ->
-            SuggestedProducts(
-                onProductClick = { onEvent(HomeEvent.ProductSelected(it.ticker)) },
-                supportingPane = supportingPane,
-                Modifier
-                    .padding(padding)
-                    .fillMaxSize()
-            )
         }
+    }
+
+    if (drawBackground) {
+        AuroraBackground(modifier = modifier.fillMaxSize()) { content() }
+    } else {
+        Box(modifier = modifier.fillMaxSize()) { content() }
     }
 }
 
@@ -107,19 +142,22 @@ private data class SuggestedProduct(
     val companyName: String,
     val category: String,
     val trend: List<Float>,
+    val price: String,
+    val dailyChange: Float,
+    val showTrendSummary: Boolean = false,
 )
 
 private val suggestedProducts = listOf(
-    SuggestedProduct("AAPL", "Apple", "Technologie", listOf(42f, 44f, 43f, 48f, 47f, 51f, 55f)),
-    SuggestedProduct("MSFT", "Microsoft", "Technologie", listOf(38f, 40f, 44f, 43f, 47f, 49f, 52f)),
-    SuggestedProduct("NVDA", "NVIDIA", "Polovodiče", listOf(29f, 34f, 32f, 41f, 46f, 45f, 58f)),
-    SuggestedProduct("GOOGL", "Alphabet", "Internet", listOf(48f, 46f, 49f, 52f, 51f, 55f, 57f)),
-    SuggestedProduct("AMZN", "Amazon", "E-commerce", listOf(35f, 39f, 37f, 42f, 46f, 44f, 49f)),
-    SuggestedProduct("KO", "Coca-Cola", "Spotřební zboží", listOf(51f, 50f, 52f, 51f, 53f, 54f, 55f)),
-    SuggestedProduct("BRK.B", "Berkshire Hathaway", "Finance", listOf(40f, 42f, 45f, 44f, 48f, 50f, 53f)),
-    SuggestedProduct("BA", "Boeing", "Letecký průmysl", listOf(55f, 52f, 54f, 49f, 47f, 45f, 43f)),
-    SuggestedProduct("TSLA", "Tesla", "Automobily", listOf(45f, 53f, 47f, 56f, 50f, 58f, 54f)),
-    SuggestedProduct("JPM", "JPMorgan Chase", "Bankovnictví", listOf(41f, 43f, 42f, 46f, 49f, 48f, 52f)),
+    SuggestedProduct("AAPL", "Apple", "Technologie", listOf(42f, 44f, 43f, 48f, 47f, 51f, 55f), "334.20 USD", 2.04f, true),
+    SuggestedProduct("MSFT", "Microsoft", "Technologie", listOf(38f, 40f, 44f, 43f, 47f, 49f, 52f), "403.44 USD", 1.97f),
+    SuggestedProduct("NVDA", "NVIDIA", "Polovodiče", listOf(29f, 34f, 32f, 41f, 46f, 45f, 58f), "206.97 USD", -2.60f, true),
+    SuggestedProduct("GOOGL", "Alphabet", "Internet", listOf(48f, 46f, 49f, 52f, 51f, 55f, 57f), "355.55 USD", -4.14f),
+    SuggestedProduct("AMZN", "Amazon", "E-commerce", listOf(35f, 39f, 37f, 42f, 46f, 44f, 49f), "252.49 USD", -0.97f),
+    SuggestedProduct("KO", "Coca-Cola", "Spotřební zboží", listOf(51f, 50f, 52f, 51f, 53f, 54f, 55f), "69.18 USD", 0.42f, true),
+    SuggestedProduct("BRK.B", "Berkshire Hathaway", "Finance", listOf(40f, 42f, 45f, 44f, 48f, 50f, 53f), "503.71 USD", 0.81f),
+    SuggestedProduct("BA", "Boeing", "Letecký průmysl", listOf(55f, 52f, 54f, 49f, 47f, 45f, 43f), "224.86 USD", -1.35f, true),
+    SuggestedProduct("TSLA", "Tesla", "Automobily", listOf(45f, 53f, 47f, 56f, 50f, 58f, 54f), "390.13 USD", -1.10f),
+    SuggestedProduct("JPM", "JPMorgan Chase", "Bankovnictví", listOf(41f, 43f, 42f, 46f, 49f, 48f, 52f), "289.42 USD", 0.64f, true),
 )
 
 @Composable
@@ -127,35 +165,46 @@ private fun SuggestedProducts(
     onProductClick: (SuggestedProduct) -> Unit,
     supportingPane: Boolean,
     modifier: Modifier = Modifier,
+    topContentPadding: androidx.compose.ui.unit.Dp = LocalDimens.current.default,
 ) {
-    LazyVerticalGrid(
+    val textColor = if (isSystemInDarkTheme()) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    LazyVerticalStaggeredGrid(
         columns = if (supportingPane) {
-            GridCells.Fixed(1)
+            StaggeredGridCells.Fixed(2)
         } else {
-            GridCells.Adaptive(minSize = 160.dp)
+            StaggeredGridCells.Adaptive(minSize = 160.dp)
         },
         modifier = modifier,
-        contentPadding = PaddingValues(LocalDimens.current.default),
+        contentPadding = PaddingValues(
+            start = LocalDimens.current.default,
+            top = topContentPadding,
+            end = LocalDimens.current.default,
+            bottom = LocalDimens.current.default + 32.dp,
+        ),
         horizontalArrangement = Arrangement.spacedBy(LocalDimens.current.small),
-        verticalArrangement = Arrangement.spacedBy(LocalDimens.current.small),
+        verticalItemSpacing = LocalDimens.current.small,
     ) {
-        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-            Surface(
+        item(span = StaggeredGridItemSpan.FullLine) {
+            FrostedSurface(
                 shape = RoundedCornerShape(LocalDimens.current.radiusLarge),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-                tonalElevation = 2.dp,
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Column(Modifier.padding(LocalDimens.current.default)) {
                     Text(
                         text = "Doporučené produkty",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = textColor,
                     )
                     Spacer(Modifier.height(LocalDimens.current.tiny))
                     Text(
                         text = "Vyberte akcii a zobrazte její aktuální cenu.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = textColor,
                     )
                 }
             }
@@ -176,31 +225,36 @@ private fun SuggestedProductCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(
+    val textColor = if (isSystemInDarkTheme()) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val shape = RoundedCornerShape(LocalDimens.current.radiusLarge)
+
+    FrostedSurface(
+        shape = shape,
         modifier = modifier
             .fillMaxWidth()
+            .clip(shape)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(LocalDimens.current.radiusLarge),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-        ),
     ) {
         Column(
             modifier = Modifier.padding(LocalDimens.current.default),
             verticalArrangement = Arrangement.spacedBy(LocalDimens.current.small),
         ) {
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(LocalDimens.current.small),
+                verticalArrangement = Arrangement.spacedBy(LocalDimens.current.tiny),
             ) {
                 Text(
                     text = product.companyName,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = textColor,
                 )
                 Surface(
+                    modifier = Modifier.align(Alignment.End),
                     shape = RoundedCornerShape(LocalDimens.current.radiusMedium),
                     color = MaterialTheme.colorScheme.primaryContainer,
                 ) {
@@ -217,13 +271,39 @@ private fun SuggestedProductCard(
                 values = product.trend,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp),
+                    .height(if (product.showTrendSummary) 58.dp else 40.dp),
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = product.price,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = textColor,
+                )
+                Text(
+                    text = "${if (product.dailyChange >= 0) "+" else ""}${"%.2f".format(product.dailyChange)} %",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (product.dailyChange >= 0) Color(0xFF008F73) else Color(0xFFD32F2F),
+                )
+            }
+
+            if (product.showTrendSummary) {
+                val change = ((product.trend.last() / product.trend.first()) - 1f) * 100f
+                Text(
+                    text = "Vývoj období: ${if (change >= 0f) "+" else ""}${"%.1f".format(change)} %",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (change >= 0f) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                )
+            }
 
             Text(
                 text = product.category,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = textColor,
             )
         }
     }
@@ -298,62 +378,78 @@ private fun TopSearchBar(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier
+        val searchShape = RoundedCornerShape(28.dp)
+        Box(
+            modifier = Modifier
                 .weight(1f)
-                .clip(RoundedCornerShape(LocalDimens.current.radiusLarge)),
-            singleLine = true,
-            shape = RoundedCornerShape(LocalDimens.current.radiusLarge),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                    if (value.isNotBlank()) {
-                        keyboardController?.hide()
-                        focusManager.clearFocus()
-                        onSearch()
+                .clip(searchShape)
+                .background(Color(0x8F52658F))
+                .border(
+                    width = 1.dp,
+                    brush = Brush.linearGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.48f),
+                            Color.White.copy(alpha = 0.10f),
+                        ),
+                    ),
+                    shape = searchShape,
+                ),
+        ) {
+            TextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                shape = searchShape,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        if (value.isNotBlank()) {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            onSearch()
+                        }
                     }
-                }
-            ),
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onTertiary
-                )
-            },
-            trailingIcon = {
-                if (value.isNotEmpty()) {
-                    IconButton(onClick = {
-                        onClear()
-                        keyboardController?.hide()
-                        focusManager.clearFocus()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onTertiary
-                        )
+                ),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = null,
+                        tint = Color.White,
+                    )
+                },
+                trailingIcon = {
+                    if (value.isNotEmpty()) {
+                        IconButton(onClick = {
+                            onClear()
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = null,
+                                tint = Color.White,
+                            )
+                        }
                     }
-                }
-            },
-            placeholder = {
-                Text(
-                    text = stringResource(DR.string.home_search_placeholder),
-                    color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.75f)
-                )
-            },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f),
-                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
-                focusedTextColor = MaterialTheme.colorScheme.onTertiary,
-                unfocusedTextColor = MaterialTheme.colorScheme.onTertiary
+                },
+                placeholder = {
+                    Text(
+                        text = stringResource(DR.string.home_search_placeholder),
+                        color = Color.White.copy(alpha = 0.72f),
+                    )
+                },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.White,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                ),
             )
-        )
+        }
         Spacer(Modifier.width(LocalDimens.current.medium))
         Button(
             onClick = {
@@ -364,15 +460,17 @@ private fun TopSearchBar(
             },
             enabled = value.isNotBlank(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.onPrimary,
-                contentColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
-                disabledContentColor = MaterialTheme.colorScheme.primary
-            )
+                containerColor = Color(0xB92D5B91),
+                contentColor = Color.White,
+                disabledContainerColor = Color(0x8F52658F),
+                disabledContentColor = Color.White.copy(alpha = 0.72f),
+            ),
+            modifier = Modifier.height(56.dp),
+            shape = RoundedCornerShape(28.dp),
         ) {
             Text(
                 stringResource(DR.string.home_search_button),
-                color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.75f)
+                color = Color.White,
             )
         }
     }

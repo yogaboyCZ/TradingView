@@ -14,10 +14,18 @@ fun TwelveQuote.toDomain(fallbackTicker: String): Price? {
     return Price(
         ticker = tkr,
         last = last,
+        open = open?.toDoubleOrNull(),
+        high = high?.toDoubleOrNull(),
+        low = low?.toDoubleOrNull(),
+        volume = volume?.toDoubleOrNull()?.toLong(),
         change = ch,
         changePercent = pct,
         previousClose = prev,
         asOf = datetime,
         name = name,
+        currency = currency,
+        exchange = exchange,
+        micCode = micCode,
+        instrumentType = type,
     )
 }

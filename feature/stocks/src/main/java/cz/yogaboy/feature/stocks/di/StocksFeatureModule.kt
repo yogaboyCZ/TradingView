@@ -17,7 +17,8 @@ val stocksPresentationModule = module {
         StocksViewModel(
             getAlpha = get(named("alphaUC")),
             getTwelve = get(named("twelveUC")),
-            ticker = params.get()
+            ticker = params.get(),
+            companyDetails = get(),
         )
     }
 }

@@ -2,16 +2,18 @@ package cz.yogaboy.app
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,6 +21,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -27,6 +31,7 @@ import cz.yogaboy.tv.nav.HomeDest
 import cz.yogaboy.tv.nav.HomeEntryScreen
 import cz.yogaboy.tv.nav.StocksDest
 import cz.yogaboy.feature.stocks.presentation.StocksRoute
+import cz.yogaboy.core.design.AuroraBackground
 
 @Composable
 fun RootNavGraph(initialTicker: String? = null) {
@@ -61,6 +66,10 @@ fun RootNavGraph(initialTicker: String? = null) {
             ListDetailLayout(
                 selectedTicker = selectedTicker,
                 onTickerSelected = { selectedTicker = it },
+                onDetailClosed = {
+                    selectedTicker = null
+                    if (backStack.lastOrNull() is StocksDest) backStack.removeLastOrNull()
+                },
             )
         } else {
             PhoneNavigation(
@@ -82,52 +91,50 @@ fun RootNavGraph(initialTicker: String? = null) {
 private fun ListDetailLayout(
     selectedTicker: String?,
     onTickerSelected: (String) -> Unit,
+    onDetailClosed: () -> Unit,
 ) {
-    Row(Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(0.42f)
-                .fillMaxSize(),
-        ) {
-            HomeEntryScreen(
-                onNavigateToDetail = onTickerSelected,
-                supportingPane = true,
-            )
-        }
+    val listFraction by animateFloatAsState(
+        targetValue = if (selectedTicker == null) 1f else 0.42f,
+        animationSpec = tween(450),
+        label = "list-pane-width",
+    )
 
-        Box(
-            modifier = Modifier
-                .weight(0.58f)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(start = 1.dp),
-        ) {
-            if (selectedTicker != null) {
-                StocksRoute(
-                    ticker = selectedTicker,
-                    onBackClick = {},
-                    showBackNavigation = false,
+    AuroraBackground(Modifier.fillMaxSize()) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val listWidth = maxWidth * listFraction
+            val detailWidth = maxWidth * (1f - listFraction)
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .width(listWidth)
+                    .fillMaxHeight()
+                    .clipToBounds(),
+            ) {
+                HomeEntryScreen(
+                    onNavigateToDetail = onTickerSelected,
+                    supportingPane = selectedTicker != null,
+                    drawBackground = false,
                 )
-            } else {
-                EmptyDetailPane()
+            }
+
+            if (selectedTicker != null) {
+                Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .width(detailWidth)
+                    .fillMaxHeight()
+                    .clipToBounds(),
+                ) {
+                    StocksRoute(
+                        ticker = selectedTicker,
+                        onBackClick = onDetailClosed,
+                        showBackNavigation = true,
+                        drawBackground = false,
+                    )
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun EmptyDetailPane() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = androidx.compose.ui.Alignment.Center,
-    ) {
-        androidx.compose.material3.Text(
-            text = "Vyberte produkt ze seznamu",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onTertiary,
-        )
     }
 }
 
