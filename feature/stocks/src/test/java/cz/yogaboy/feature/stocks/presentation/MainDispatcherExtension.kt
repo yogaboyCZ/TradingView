@@ -14,11 +14,11 @@ class MainDispatcherExtension : BeforeEachCallback, AfterEachCallback {
 
     private val dispatcher = StandardTestDispatcher()
 
-    override fun beforeEach(context: ExtensionContext?) {
+    override fun beforeEach(context: ExtensionContext) {
         Dispatchers.setMain(dispatcher)
     }
 
-    override fun afterEach(context: ExtensionContext?) {
+    override fun afterEach(context: ExtensionContext) {
         Dispatchers.resetMain()
     }
 
