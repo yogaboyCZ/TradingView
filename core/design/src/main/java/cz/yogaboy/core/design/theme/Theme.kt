@@ -30,9 +30,9 @@ private val LightColors = lightColorScheme(
 
 private val DarkColors = darkColorScheme(
     primary = BrandCyanDark,
-    onPrimary = OutlineDark,
+    onPrimary = Color(0xFF03123D),
     tertiary = BrandMintDark,
-    onTertiary = onSurfaceDarkMedium,
+    onTertiary = Color(0xFF251C6E),
     background = BackgroundDark,
     onBackground = OnSurfaceDark,
     surface = SurfaceDark,

@@ -59,31 +59,46 @@ fun StocksScreen(
     val content: @Composable () -> Unit = {
         Scaffold(
             containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+            contentColor = MaterialTheme.colorScheme.onSurface,
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = ticker.uppercase(),
-                            style = MaterialTheme.typography.titleLarge,
-                        )
-                    },
-                    navigationIcon = {
-                        if (showBackNavigation) {
-                            IconButton(onClick = onBackClick) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Zpět",
-                                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            if (drawBackground) Brush.verticalGradient(
+                                listOf(
+                                    Color(0xF20A1742),
+                                    Color(0xD90E2258),
+                                    Color(0x8F0D2B67),
+                                    Color.Transparent,
+                                ),
+                            ) else Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent)),
+                        ),
+                ) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = ticker.uppercase(),
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        },
+                        navigationIcon = {
+                            if (showBackNavigation) {
+                                IconButton(onClick = onBackClick) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Zpět",
+                                    )
+                                }
                             }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onTertiary,
-                        titleContentColor = MaterialTheme.colorScheme.onTertiary,
-                    ),
-                )
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            navigationIconContentColor = Color.White,
+                            titleContentColor = Color.White,
+                        ),
+                    )
+                }
             },
         ) { contentPadding ->
             LazyColumn(

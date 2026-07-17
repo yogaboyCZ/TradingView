@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,24 +21,36 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -46,6 +60,7 @@ import cz.yogaboy.core.design.LocalDimens
 import cz.yogaboy.core.design.AuroraBackground
 import cz.yogaboy.core.design.FrostedSurface
 import cz.yogaboy.core.design.R as DR
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +72,39 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
+    val gridState = rememberLazyStaggeredGridState()
+    // Header + recommendation card + roughly the first third of a product card.
+    // Keeping this independent of the lazy-grid item index avoids a sudden snap.
+    val collapseDistancePx = with(density) { 440.dp.toPx() }
+    var accumulatedScrollPx by remember { mutableFloatStateOf(0f) }
+    val collapseScrollConnection = remember(collapseDistancePx) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                accumulatedScrollPx = (accumulatedScrollPx - consumed.y)
+                    .coerceIn(0f, collapseDistancePx)
+                return Offset.Zero
+            }
+        }
+    }
+    val rawCollapseProgress = (accumulatedScrollPx / collapseDistancePx).coerceIn(0f, 1f)
+    var manuallyExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(gridState.isScrollInProgress) {
+        if (gridState.isScrollInProgress) manuallyExpanded = false
+    }
+    val collapseTarget = when {
+        manuallyExpanded -> 0f
+        else -> rawCollapseProgress
+    }
+    val collapseProgress by animateFloatAsState(
+        targetValue = collapseTarget,
+        animationSpec = tween(if (manuallyExpanded) 520 else 90),
+        label = "scroll-linked-search-collapse",
+    )
     var headerHeightPx by remember(density) {
         mutableIntStateOf(with(density) { 190.dp.roundToPx() })
     }
@@ -67,64 +115,98 @@ fun HomeScreen(
             SuggestedProducts(
                 onProductClick = { onEvent(HomeEvent.ProductSelected(it.ticker)) },
                 supportingPane = supportingPane,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(collapseScrollConnection),
                 topContentPadding = headerHeight + LocalDimens.current.small,
+                gridState = gridState,
             )
 
-            Column(
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .onSizeChanged { headerHeightPx = it.height },
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth(),
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xF20A1742),
-                                    Color(0xD90E2258),
-                                    Color(0xA60D2B67),
-                                    Color.Transparent,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged {
+                                    if (it.height > headerHeightPx) headerHeightPx = it.height
+                                }
+                                .background(
+                                    if (drawBackground) Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color(0xF20A1742),
+                                            Color(0xD90E2258),
+                                            Color(0xA60D2B67),
+                                            Color.Transparent,
+                                        ),
+                                    ) else Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent)),
                                 ),
-                            ),
-                        ),
-                ) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(
-                            start = LocalDimens.current.medium,
-                            end = LocalDimens.current.medium,
-                            top = LocalDimens.current.tiny,
-                            bottom = 24.dp,
-                        ),
-                ) {
-                    TopAppBar(
-                        title = {
-                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = stringResource(DR.string.home_title),
-                                    color = Color.White,
+                        ) {
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .windowInsetsPadding(WindowInsets.statusBars)
+                                    .padding(
+                                        start = LocalDimens.current.medium,
+                                        end = LocalDimens.current.medium,
+                                        top = LocalDimens.current.tiny,
+                                        bottom = 24.dp,
+                                    ),
+                            ) {
+                                if (!supportingPane) {
+                                    TopAppBar(
+                                        title = {
+                                            Box(
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .graphicsLayer { alpha = 1f - collapseProgress },
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Text(
+                                                    text = stringResource(DR.string.home_title),
+                                                    color = Color.White,
+                                                )
+                                            }
+                                        },
+                                        colors = TopAppBarDefaults.topAppBarColors(
+                                            containerColor = Color.Transparent,
+                                            titleContentColor = Color.White,
+                                        ),
+                                    )
+                                    Spacer(Modifier.height(LocalDimens.current.small))
+                                } else {
+                                    Text(
+                                        text = stringResource(DR.string.home_title),
+                                        modifier = Modifier.padding(
+                                            start = LocalDimens.current.small,
+                                            bottom = LocalDimens.current.small,
+                                        ).graphicsLayer { alpha = 1f - collapseProgress },
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = Color.White,
+                                    )
+                                }
+
+                                TopSearchBar(
+                                    value = state.query,
+                                    onValueChange = { onEvent(HomeEvent.QueryChanged(it)) },
+                                    onSearch = {
+                                        if (state.query.isNotBlank()) onEvent(HomeEvent.Submit)
+                                    },
+                                    onClear = { onEvent(HomeEvent.Clear) },
+                                    collapseProgress = collapseProgress,
+                                    onExpand = {
+                                        accumulatedScrollPx = 0f
+                                        manuallyExpanded = true
+                                    },
+                                    modifier = Modifier.graphicsLayer {
+                                        translationY = with(density) {
+                                            -(if (supportingPane) 42.dp else 72.dp).toPx()
+                                        } * collapseProgress
+                                    },
                                 )
                             }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            titleContentColor = Color.White,
-                        )
-                    )
-                    Spacer(Modifier.height(LocalDimens.current.small))
-
-                    TopSearchBar(
-                        value = state.query,
-                        onValueChange = { onEvent(HomeEvent.QueryChanged(it)) },
-                        onSearch = { if (state.query.isNotBlank()) onEvent(HomeEvent.Submit) },
-                        onClear = { onEvent(HomeEvent.Clear) }
-                    )
-                }
                 }
             }
         }
@@ -166,6 +248,7 @@ private fun SuggestedProducts(
     supportingPane: Boolean,
     modifier: Modifier = Modifier,
     topContentPadding: androidx.compose.ui.unit.Dp = LocalDimens.current.default,
+    gridState: LazyStaggeredGridState,
 ) {
     val textColor = if (isSystemInDarkTheme()) {
         MaterialTheme.colorScheme.onSurface
@@ -179,6 +262,7 @@ private fun SuggestedProducts(
         } else {
             StaggeredGridCells.Adaptive(minSize = 160.dp)
         },
+        state = gridState,
         modifier = modifier,
         contentPadding = PaddingValues(
             start = LocalDimens.current.default,
@@ -369,19 +453,52 @@ private fun TopSearchBar(
     onValueChange: (String) -> Unit,
     onSearch: () -> Unit,
     onClear: () -> Unit,
+    collapseProgress: Float,
+    onExpand: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val density = LocalDensity.current
+    val imeBottom = WindowInsets.ime.getBottom(density)
+    val focusRequester = remember { FocusRequester() }
+    var focusAfterExpand by remember { mutableStateOf(false) }
+    var wasKeyboardVisible by remember { mutableStateOf(false) }
 
-    Row(
+    LaunchedEffect(imeBottom) {
+        if (imeBottom > 0) {
+            wasKeyboardVisible = true
+        } else if (wasKeyboardVisible) {
+            focusManager.clearFocus(force = true)
+            wasKeyboardVisible = false
+        }
+    }
+
+    LaunchedEffect(focusAfterExpand) {
+        if (focusAfterExpand) {
+            focusRequester.requestFocus()
+            delay(16)
+            keyboardController?.show()
+            focusAfterExpand = false
+        }
+    }
+
+    BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
     ) {
+        val mergeProgress = ((collapseProgress - 0.28f) / 0.48f).coerceIn(0f, 1f)
+        val buttonCollapse = ((collapseProgress - 0.68f) / 0.32f).coerceIn(0f, 1f)
+        val buttonWidth = 104.dp * (1f - buttonCollapse)
+        val gapWidth = LocalDimens.current.medium * (1f - mergeProgress)
+        val searchWidth = 56.dp +
+            (maxWidth - 56.dp - buttonWidth - gapWidth) *
+            (1f - collapseProgress)
         val searchShape = RoundedCornerShape(28.dp)
-        Box(
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
             modifier = Modifier
-                .weight(1f)
+                .width(searchWidth)
+                .height(56.dp)
                 .clip(searchShape)
                 .background(Color(0x8F52658F))
                 .border(
@@ -393,12 +510,17 @@ private fun TopSearchBar(
                         ),
                     ),
                     shape = searchShape,
-                ),
-        ) {
+                )
+            ) {
             TextField(
                 value = value,
                 onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .graphicsLayer {
+                        alpha = 1f - ((collapseProgress - 0.82f) / 0.18f).coerceIn(0f, 1f)
+                    },
                 singleLine = true,
                 shape = searchShape,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -449,9 +571,27 @@ private fun TopSearchBar(
                     unfocusedTextColor = Color.White,
                 ),
             )
-        }
-        Spacer(Modifier.width(LocalDimens.current.medium))
-        Button(
+            if (collapseProgress > 0.90f) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Rozbalit hledání",
+                    tint = Color.White,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
+            if (collapseProgress > 0.01f) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable {
+                            onExpand()
+                            focusAfterExpand = true
+                        },
+                )
+            }
+            }
+            Spacer(Modifier.width(gapWidth))
+            Button(
             onClick = {
                 if (value.isNotBlank()) {
                     focusManager.clearFocus(force = true)
@@ -465,13 +605,24 @@ private fun TopSearchBar(
                 disabledContainerColor = Color(0x8F52658F),
                 disabledContentColor = Color.White.copy(alpha = 0.72f),
             ),
-            modifier = Modifier.height(56.dp),
+            modifier = Modifier
+                .width(buttonWidth)
+                .height(56.dp)
+                .graphicsLayer {
+                    alpha = 1f - mergeProgress
+                    translationX = -size.width * 0.82f * mergeProgress
+                },
             shape = RoundedCornerShape(28.dp),
-        ) {
-            Text(
-                stringResource(DR.string.home_search_button),
-                color = Color.White,
-            )
+            ) {
+                if (buttonWidth > 1.dp) {
+                    Text(
+                        text = stringResource(DR.string.home_search_button),
+                        color = Color.White,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                }
+            }
         }
     }
 }
