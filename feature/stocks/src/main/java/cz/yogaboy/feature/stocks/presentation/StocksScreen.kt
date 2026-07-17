@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -114,6 +116,7 @@ fun StocksScreen(
             ) {
                 item {
                     PriceSummaryCard(
+                        ticker = ticker,
                         alphaState = state.alpha,
                         twelveState = state.twelve,
                     )
@@ -134,7 +137,11 @@ fun StocksScreen(
 
 @Composable
 private fun PriceHistorySection(state: StocksUiState<List<PricePoint>>) {
-    DetailSection(title = "Vývoj ceny", badge = "TD") {
+    DetailSection(
+        title = "Vývoj ceny",
+        badge = "TD",
+        modifier = Modifier.height(296.dp),
+    ) {
         when (state) {
             StocksUiState.Loading -> SectionLoading()
             is StocksUiState.Error -> SectionUnavailable(state.message)
@@ -298,10 +305,11 @@ private fun CompanyNewsSection(state: StocksUiState<List<CompanyNews>>) {
 private fun DetailSection(
     title: String,
     badge: String,
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     FrostedSurface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(LocalDimens.current.radiusLarge),
     ) {
         Column(
@@ -376,11 +384,20 @@ private fun SectionUnavailable(message: String) {
 
 @Composable
 fun PriceSummaryCard(
+    ticker: String,
     alphaState: StocksUiState<DisplayPrice>,
     twelveState: StocksUiState<DisplayPrice>,
     modifier: Modifier = Modifier
 ) {
     var showTwelveData by rememberSaveable { mutableStateOf(false) }
+    val entryRotation = remember(ticker) { Animatable(-88f) }
+    LaunchedEffect(ticker) {
+        entryRotation.snapTo(-88f)
+        entryRotation.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(680),
+        )
+    }
     val rotation by animateFloatAsState(
         targetValue = if (showTwelveData) 180f else 0f,
         animationSpec = spring(
@@ -394,36 +411,48 @@ fun PriceSummaryCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                )
-            )
             .graphicsLayer {
-                rotationY = rotation
+                transformOrigin = TransformOrigin(0f, 0.5f)
+                rotationY = entryRotation.value
+                alpha = 1f - (kotlin.math.abs(entryRotation.value) / 88f) * 0.45f
                 cameraDistance = 18f * density
-            }
-            .clip(shape)
-            .clickable { showTwelveData = !showTwelveData },
+            },
     ) {
-        FrostedSurface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = shape,
-        ) {
-            if (rotation <= 90f) {
-                ProviderCardFace(
-                    badge = "AV",
-                    provider = stringResource(DR.string.alpha_vantage_provider),
-                    state = alphaState,
-                )
-            } else {
-                Box(Modifier.graphicsLayer { rotationY = 180f }) {
-                    ProviderCardFace(
-                        badge = "TD",
-                        provider = stringResource(DR.string.twelve_data_provider),
-                        state = twelveState,
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessMediumLow,
                     )
+                )
+                .graphicsLayer {
+                    transformOrigin = TransformOrigin.Center
+                    rotationY = rotation
+                    cameraDistance = 18f * density
+                }
+                .clip(shape)
+                .clickable { showTwelveData = !showTwelveData },
+        ) {
+            FrostedSurface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = shape,
+            ) {
+                if (rotation <= 90f) {
+                    ProviderCardFace(
+                        badge = "AV",
+                        provider = stringResource(DR.string.alpha_vantage_provider),
+                        state = alphaState,
+                    )
+                } else {
+                    Box(Modifier.graphicsLayer { rotationY = 180f }) {
+                        ProviderCardFace(
+                            badge = "TD",
+                            provider = stringResource(DR.string.twelve_data_provider),
+                            state = twelveState,
+                        )
+                    }
                 }
             }
         }
@@ -437,7 +466,13 @@ private fun ProviderCardFace(
     state: StocksUiState<DisplayPrice>,
 ) {
     Column(
-        modifier = Modifier.padding(LocalDimens.current.default),
+        // Reserve the space occupied by a regular quote before its asynchronous
+        // data arrives. Otherwise the sections below jump up during the entry flip
+        // and back down as soon as the quote replaces the shorter loading row.
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 320.dp)
+            .padding(LocalDimens.current.default),
         verticalArrangement = Arrangement.spacedBy(LocalDimens.current.medium),
     ) {
         Row(
@@ -538,8 +573,16 @@ private fun QuoteValue(
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f))
             .padding(LocalDimens.current.small),
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall)
-        Text(value?.toString() ?: "—", style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value?.toString() ?: "—",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

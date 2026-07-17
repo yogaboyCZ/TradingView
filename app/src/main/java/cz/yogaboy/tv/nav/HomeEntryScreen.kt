@@ -10,7 +10,9 @@ import cz.yogaboy.feature.home.presentation.*
 @Composable
 fun HomeEntryScreen(
     onNavigateToDetail: (String) -> Unit,
+    wideLayout: Boolean = false,
     supportingPane: Boolean = false,
+    selectedTicker: String? = null,
     drawBackground: Boolean = true,
 ) {
     val vm: HomeViewModel = koinViewModel()
@@ -27,7 +29,9 @@ fun HomeEntryScreen(
     HomeScreen(
         state = state,
         onEvent = { vm.handle(it) },
+        wideLayout = wideLayout,
         supportingPane = supportingPane,
+        selectedTicker = selectedTicker,
         drawBackground = drawBackground,
     )
 }

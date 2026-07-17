@@ -29,6 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -67,12 +74,17 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     state: HomeState,
     onEvent: (HomeEvent) -> Unit,
+    wideLayout: Boolean = false,
     supportingPane: Boolean = false,
+    selectedTicker: String? = null,
     drawBackground: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
     val gridState = rememberLazyStaggeredGridState()
+    // On a wide single-pane screen the header has enough room and must stay fully
+    // expanded. Once detail is open, the narrowed supporting pane can collapse it.
+    val searchBarCollapseEnabled = !wideLayout || supportingPane
     // Header + recommendation card + roughly the first third of a product card.
     // Keeping this independent of the lazy-grid item index avoids a sudden snap.
     val collapseDistancePx = with(density) { 440.dp.toPx() }
@@ -96,7 +108,14 @@ fun HomeScreen(
     LaunchedEffect(gridState.isScrollInProgress) {
         if (gridState.isScrollInProgress) manuallyExpanded = false
     }
+    LaunchedEffect(searchBarCollapseEnabled) {
+        if (!searchBarCollapseEnabled) {
+            accumulatedScrollPx = 0f
+            manuallyExpanded = false
+        }
+    }
     val collapseTarget = when {
+        !searchBarCollapseEnabled -> 0f
         manuallyExpanded -> 0f
         else -> rawCollapseProgress
     }
@@ -115,9 +134,16 @@ fun HomeScreen(
             SuggestedProducts(
                 onProductClick = { onEvent(HomeEvent.ProductSelected(it.ticker)) },
                 supportingPane = supportingPane,
+                selectedTicker = selectedTicker,
                 modifier = Modifier
                     .fillMaxSize()
-                    .nestedScroll(collapseScrollConnection),
+                    .then(
+                        if (searchBarCollapseEnabled) {
+                            Modifier.nestedScroll(collapseScrollConnection)
+                        } else {
+                            Modifier
+                        }
+                    ),
                 topContentPadding = headerHeight + LocalDimens.current.small,
                 gridState = gridState,
             )
@@ -257,10 +283,12 @@ private val suggestedProducts = listOf(
 private fun SuggestedProducts(
     onProductClick: (SuggestedProduct) -> Unit,
     supportingPane: Boolean,
+    selectedTicker: String?,
     modifier: Modifier = Modifier,
     topContentPadding: androidx.compose.ui.unit.Dp = LocalDimens.current.default,
     gridState: LazyStaggeredGridState,
 ) {
+    val density = LocalDensity.current
     val textColor = if (isSystemInDarkTheme()) {
         MaterialTheme.colorScheme.onSurface
     } else {
@@ -306,10 +334,29 @@ private fun SuggestedProducts(
         }
 
         items(suggestedProducts, key = SuggestedProduct::ticker) { product ->
-            SuggestedProductCard(
-                product = product,
-                onClick = { onProductClick(product) },
-            )
+            AnimatedVisibility(
+                visible = product.ticker != selectedTicker,
+                enter = fadeIn(tween(420)),
+                exit = slideOutHorizontally(
+                    animationSpec = tween(520),
+                    targetOffsetX = { it * 2 },
+                ) + fadeOut(tween(420)) + shrinkVertically(tween(520)),
+            ) {
+                val rotationY by transition.animateFloat(
+                    transitionSpec = { tween(520) },
+                    label = "product-card-flip-${product.ticker}",
+                ) { visibility ->
+                    if (visibility == EnterExitState.Visible) 0f else 88f
+                }
+                SuggestedProductCard(
+                    product = product,
+                    onClick = { onProductClick(product) },
+                    modifier = Modifier.graphicsLayer {
+                        this.rotationY = rotationY
+                        cameraDistance = 18f * density.density
+                    },
+                )
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -98,11 +99,18 @@ private fun ListDetailLayout(
         animationSpec = tween(450),
         label = "list-pane-width",
     )
+    val detailReveal by animateFloatAsState(
+        targetValue = if (selectedTicker == null) 0f else 1f,
+        animationSpec = tween(450),
+        label = "detail-pane-reveal",
+    )
 
     AuroraBackground(Modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val listWidth = maxWidth * listFraction
-            val detailWidth = maxWidth * (1f - listFraction)
+            // Measure detail at its final width from the first frame. Animating its
+            // measured width makes every card reflow vertically during the transition.
+            val detailWidth = maxWidth * 0.58f
 
             Box(
                 modifier = Modifier
@@ -113,7 +121,9 @@ private fun ListDetailLayout(
             ) {
                 HomeEntryScreen(
                     onNavigateToDetail = onTickerSelected,
+                    wideLayout = true,
                     supportingPane = selectedTicker != null,
+                    selectedTicker = selectedTicker,
                     drawBackground = false,
                 )
             }
@@ -124,7 +134,11 @@ private fun ListDetailLayout(
                     .align(Alignment.CenterEnd)
                     .width(detailWidth)
                     .fillMaxHeight()
-                    .clipToBounds(),
+                    .clipToBounds()
+                    .graphicsLayer {
+                        translationX = size.width * (1f - detailReveal)
+                        alpha = detailReveal
+                    },
                 ) {
                     StocksRoute(
                         ticker = selectedTicker,

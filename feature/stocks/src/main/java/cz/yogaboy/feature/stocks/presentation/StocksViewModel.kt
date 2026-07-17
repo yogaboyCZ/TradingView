@@ -12,6 +12,7 @@ import cz.yogaboy.domain.marketdata.PricePoint
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -94,8 +95,14 @@ class StocksViewModel(
         }
 
     private val historyState = detailsState { getDailyHistory(ticker) }
-    private val profileState = detailsState { getCompanyProfile(ticker) }
-    private val newsState = detailsState { getCompanyNews(ticker) }
+    // These endpoints require a paid Twelve Data tier. Avoid spending two API
+    // credits on every opened ticker when they cannot succeed on the free plan.
+    private val profileState = MutableStateFlow<StocksUiState<CompanyProfile>>(
+        StocksUiState.Error("Firemní profil vyžaduje placený Twelve Data tarif.")
+    )
+    private val newsState = MutableStateFlow<StocksUiState<List<CompanyNews>>>(
+        StocksUiState.Error("Zprávy společnosti vyžadují placený Twelve Data tarif.")
+    )
 
     val state: StateFlow<StocksState> =
         with(this) {

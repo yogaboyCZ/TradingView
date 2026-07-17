@@ -20,6 +20,7 @@ val networkModule = module {
 
     single<Interceptor>(named("log")) {
         HttpLoggingInterceptor().apply {
+            redactQueryParams("apikey")
             level = if (BuildConfig.DEBUG)
                 HttpLoggingInterceptor.Level.BODY
             else

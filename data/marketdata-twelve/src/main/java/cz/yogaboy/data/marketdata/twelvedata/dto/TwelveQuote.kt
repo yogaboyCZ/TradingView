@@ -5,6 +5,9 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class TwelveQuote(
+    @param:Json(name = "code") val errorCode: Int?,
+    @param:Json(name = "message") val errorMessage: String?,
+    @param:Json(name = "status") val status: String?,
     @param:Json(name = "symbol") val symbol: String?,
     @param:Json(name = "name") val name: String?,
     @param:Json(name = "close") val close: String?,

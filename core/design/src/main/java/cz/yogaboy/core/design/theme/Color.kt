@@ -4,12 +4,12 @@ import androidx.compose.ui.graphics.Color
 
 val BrandCyanLight = Color(0xFF3880E0)
 val DarkCyanLight = Color(0xFF0E3C6E)
-val BrandMintLight = Color(0xFF2196F3)
+val BrandMintLight = Color(0xFF0B67C2)
 val BackgroundLight = Color(0xFFF2FBFF)
 val SurfaceLight = Color(0xFFFFFFFF)
-val OnSurfaceLight = Color(0xFFB3CFEF)
+val OnSurfaceLight = Color(0xFF071B3D)
 val SurfaceVariantLight = Color(0xFFE3F6FD)
-val OutlineLight = Color(0xFFB8E2F2)
+val OutlineLight = Color(0xFF7293B5)
 val onSurfaceLightMedium = Color(0xFF03123D)
 
 val BrandCyanDark = Color(0xFF8FD8FF)

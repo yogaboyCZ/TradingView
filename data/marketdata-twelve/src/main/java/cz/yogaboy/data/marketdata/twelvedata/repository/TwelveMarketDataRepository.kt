@@ -6,6 +6,7 @@ import cz.yogaboy.data.marketdata.twelvedata.network.TwelveDataApi
 import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.domain.marketdata.Price
 import org.json.JSONObject
+import java.io.IOException
 import java.util.concurrent.CancellationException
 
 class TwelveMarketDataRepository(
@@ -14,7 +15,11 @@ class TwelveMarketDataRepository(
 ) : MarketDataRepository {
 
     override suspend fun getLatestPrice(ticker: String): Price? = try {
-        api.getQuote(symbol = ticker, apiKey = apiKey).toDomain(fallbackTicker = ticker)
+        val quote = api.getQuote(symbol = ticker, apiKey = apiKey)
+        if (quote.status == "error" || quote.errorCode != null) {
+            throw IOException(quote.errorMessage ?: "Twelve Data request failed (${quote.errorCode}).")
+        }
+        quote.toDomain(fallbackTicker = ticker)
             ?: run {
                 // Fallback on price when quote is not available
                 val body = api.getPriceRaw(symbol = ticker, apiKey = apiKey).string()
