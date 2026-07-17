@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import cz.yogaboy.core.design.LocalDimens
 import cz.yogaboy.core.design.AuroraBackground
 import cz.yogaboy.core.design.FrostedSurface
+import cz.yogaboy.core.design.theme.tradingColors
 import cz.yogaboy.core.design.R as DR
 import kotlinx.coroutines.delay
 
@@ -166,12 +167,7 @@ fun HomeScreen(
                                     .graphicsLayer { alpha = 1f - collapseProgress }
                                     .background(
                                     if (drawBackground) Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color(0xF20A1742),
-                                            Color(0xD90E2258),
-                                            Color(0xA60D2B67),
-                                            Color.Transparent,
-                                        ),
+                                        colors = MaterialTheme.tradingColors.headerScrim,
                                     ) else Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent)),
                                     ),
                             )
@@ -200,13 +196,13 @@ fun HomeScreen(
                                             ) {
                                                 Text(
                                                     text = stringResource(DR.string.home_title),
-                                                    color = Color.White,
+                                                    color = MaterialTheme.tradingColors.onBackdrop,
                                                 )
                                             }
                                         },
                                         colors = TopAppBarDefaults.topAppBarColors(
                                             containerColor = Color.Transparent,
-                                            titleContentColor = Color.White,
+                                            titleContentColor = MaterialTheme.tradingColors.onBackdrop,
                                         ),
                                     )
                                     Spacer(Modifier.height(LocalDimens.current.small))
@@ -221,7 +217,7 @@ fun HomeScreen(
                                                 (collapseProgress / 0.35f).coerceIn(0f, 1f)
                                         },
                                         style = MaterialTheme.typography.titleLarge,
-                                        color = Color.White,
+                                        color = MaterialTheme.tradingColors.onBackdrop,
                                     )
                                 }
 
@@ -429,7 +425,11 @@ private fun SuggestedProductCard(
                 Text(
                     text = "${if (product.dailyChange >= 0) "+" else ""}${"%.2f".format(product.dailyChange)} %",
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (product.dailyChange >= 0) Color(0xFF008F73) else Color(0xFFD32F2F),
+                    color = if (product.dailyChange >= 0) {
+                        MaterialTheme.tradingColors.positive
+                    } else {
+                        MaterialTheme.tradingColors.negative
+                    },
                 )
             }
 
@@ -438,7 +438,7 @@ private fun SuggestedProductCard(
                 Text(
                     text = "Vývoj období: ${if (change >= 0f) "+" else ""}${"%.1f".format(change)} %",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (change >= 0f) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                    color = if (change >= 0f) MaterialTheme.tradingColors.positive else MaterialTheme.tradingColors.negative,
                 )
             }
 
@@ -459,7 +459,7 @@ private fun SparklineChart(
     if (values.size < 2) return
 
     val isPositive = values.last() >= values.first()
-    val lineColor = if (isPositive) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+    val lineColor = if (isPositive) MaterialTheme.tradingColors.positive else MaterialTheme.tradingColors.negative
     val guideColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
 
     Canvas(modifier = modifier) {
@@ -558,13 +558,13 @@ private fun TopSearchBar(
                 .width(searchWidth)
                 .height(56.dp)
                 .clip(searchShape)
-                .background(Color(0x8F52658F))
+                .background(MaterialTheme.tradingColors.searchContainer)
                 .border(
                     width = 1.dp,
                     brush = Brush.linearGradient(
                         listOf(
-                            Color.White.copy(alpha = 0.48f),
-                            Color.White.copy(alpha = 0.10f),
+                            MaterialTheme.tradingColors.onBackdrop.copy(alpha = 0.48f),
+                            MaterialTheme.tradingColors.onBackdrop.copy(alpha = 0.10f),
                         ),
                     ),
                     shape = searchShape,
@@ -595,7 +595,7 @@ private fun TopSearchBar(
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = MaterialTheme.tradingColors.onBackdrop,
                     )
                 },
                 trailingIcon = {
@@ -608,7 +608,7 @@ private fun TopSearchBar(
                             Icon(
                                 imageVector = Icons.Filled.Close,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = MaterialTheme.tradingColors.onBackdrop,
                             )
                         }
                     }
@@ -616,7 +616,7 @@ private fun TopSearchBar(
                 placeholder = {
                     Text(
                         text = stringResource(DR.string.home_search_placeholder),
-                        color = Color.White.copy(alpha = 0.72f),
+                        color = MaterialTheme.tradingColors.onBackdrop.copy(alpha = 0.72f),
                     )
                 },
                 colors = TextFieldDefaults.colors(
@@ -624,16 +624,16 @@ private fun TopSearchBar(
                     unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.White,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
+                    cursorColor = MaterialTheme.tradingColors.onBackdrop,
+                    focusedTextColor = MaterialTheme.tradingColors.onBackdrop,
+                    unfocusedTextColor = MaterialTheme.tradingColors.onBackdrop,
                 ),
             )
             if (collapseProgress > 0.90f) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = "Rozbalit hledání",
-                    tint = Color.White,
+                    tint = MaterialTheme.tradingColors.onBackdrop,
                     modifier = Modifier.align(Alignment.Center),
                 )
             }
@@ -658,10 +658,10 @@ private fun TopSearchBar(
             },
             enabled = value.isNotBlank(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xB92D5B91),
-                contentColor = Color.White,
-                disabledContainerColor = Color(0x8F52658F),
-                disabledContentColor = Color.White.copy(alpha = 0.72f),
+                containerColor = MaterialTheme.tradingColors.searchButton,
+                contentColor = MaterialTheme.tradingColors.onBackdrop,
+                disabledContainerColor = MaterialTheme.tradingColors.searchDisabledContainer,
+                disabledContentColor = MaterialTheme.tradingColors.onBackdrop.copy(alpha = 0.72f),
             ),
             modifier = Modifier
                 .width(buttonWidth)
@@ -675,7 +675,7 @@ private fun TopSearchBar(
                 if (buttonWidth > 1.dp) {
                     Text(
                         text = stringResource(DR.string.home_search_button),
-                        color = Color.White,
+                        color = MaterialTheme.tradingColors.onBackdrop,
                         maxLines = 1,
                         softWrap = false,
                     )

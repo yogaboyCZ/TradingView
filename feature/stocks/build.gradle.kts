@@ -1,6 +1,7 @@
 plugins {
     id("tradingview.android-library")
     id("tradingview.compose-conventions")
+    alias(libs.plugins.koin.compiler)
 }
 
 android {
@@ -18,6 +19,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.koin.annotations)
     implementation(project(":domain:marketdata"))
     implementation(project(":core:common"))
     implementation(project(":core:design"))

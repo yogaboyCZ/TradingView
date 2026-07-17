@@ -1,31 +1,70 @@
 package cz.yogaboy.data.marketdata.twelvedata.di
 
+import com.squareup.moshi.Moshi
+import cz.yogaboy.data.marketdata.cache.CachedCompanyDetailsRepository
+import cz.yogaboy.data.marketdata.cache.CachedMarketDataRepository
+import cz.yogaboy.data.marketdata.cache.MarketDataCache
 import cz.yogaboy.data.marketdata.twelvedata.BuildConfig
 import cz.yogaboy.data.marketdata.twelvedata.network.TwelveDataApi
-import cz.yogaboy.data.marketdata.twelvedata.repository.TwelveMarketDataRepository
 import cz.yogaboy.data.marketdata.twelvedata.repository.TwelveCompanyDetailsRepository
+import cz.yogaboy.data.marketdata.twelvedata.repository.TwelveMarketDataRepository
 import cz.yogaboy.domain.marketdata.CompanyDetailsRepository
 import cz.yogaboy.domain.marketdata.MarketDataRepository
-import org.koin.core.qualifier.named
+import okhttp3.OkHttpClient
+import org.koin.core.annotation.Named
 import org.koin.dsl.module
-import retrofit2.Retrofit
+import org.koin.plugin.module.dsl.create
 import retrofit2.Converter
+import retrofit2.Retrofit
 
-val twelveModule = module {
-    single { get<Retrofit>(named("twelveRetrofit")).create(TwelveDataApi::class.java) }
-    single<MarketDataRepository>(named("twelve")) { TwelveMarketDataRepository(get(), get(named("twelveApiKey"))) }
-    single<CompanyDetailsRepository> {
-        TwelveCompanyDetailsRepository(get(), get(named("twelveApiKey")))
-    }
-}
+@Named("twelveApiKey")
+private fun twelveApiKey(): String = BuildConfig.API_KEY
+
+@Named("twelveRetrofit")
+private fun twelveRetrofit(client: OkHttpClient, converter: Converter.Factory): Retrofit =
+    Retrofit.Builder()
+        .client(client)
+        .baseUrl(BuildConfig.BASE_URI)
+        .addConverterFactory(converter)
+        .build()
+
+private fun twelveApi(@Named("twelveRetrofit") retrofit: Retrofit): TwelveDataApi =
+    retrofit.create(TwelveDataApi::class.java)
+
+@Named("twelveRemote")
+private fun twelveRemote(
+    api: TwelveDataApi,
+    @Named("twelveApiKey") apiKey: String,
+): MarketDataRepository = TwelveMarketDataRepository(api, apiKey)
+
+@Named("twelve")
+private fun cachedTwelve(
+    @Named("twelveRemote") remote: MarketDataRepository,
+    cache: MarketDataCache,
+    moshi: Moshi,
+): MarketDataRepository = CachedMarketDataRepository("twelve", remote, cache, moshi)
+
+@Named("twelveDetailsRemote")
+private fun twelveDetailsRemote(
+    api: TwelveDataApi,
+    @Named("twelveApiKey") apiKey: String,
+): CompanyDetailsRepository = TwelveCompanyDetailsRepository(api, apiKey)
+
+private fun cachedDetails(
+    @Named("twelveDetailsRemote") remote: CompanyDetailsRepository,
+    cache: MarketDataCache,
+    moshi: Moshi,
+): CompanyDetailsRepository = CachedCompanyDetailsRepository("twelve", remote, cache, moshi)
 
 val twelveNetworkModule = module {
-    single(named("twelveApiKey")) { BuildConfig.API_KEY }
-    single(named("twelveRetrofit")) {
-        Retrofit.Builder()
-            .client(get())
-            .baseUrl(BuildConfig.BASE_URI)
-            .addConverterFactory(get<Converter.Factory>())
-            .build()
-    }
+    single { create(::twelveApiKey) }
+    single { create(::twelveRetrofit) }
+    single { create(::twelveApi) }
+}
+
+val twelveModule = module {
+    single { create(::twelveRemote) }
+    single { create(::cachedTwelve) }
+    single { create(::twelveDetailsRemote) }
+    single { create(::cachedDetails) }
 }

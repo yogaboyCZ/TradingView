@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     id("tradingview.android-library")
+    alias(libs.plugins.koin.compiler)
 }
 
 fun Project.resolveApiKey(keyName: String): String {
@@ -58,8 +59,10 @@ android {
 dependencies {
     implementation(project(":core:network"))
     implementation(project(":domain:marketdata"))
+    implementation(project(":data:marketdata-cache"))
     implementation(libs.squareup.retrofit2)
     implementation(libs.squareup.retrofit2.converter.moshi)
     implementation(libs.squareup.moshi.kotlin)
     implementation(libs.koin.core)
+    implementation(libs.koin.annotations)
 }

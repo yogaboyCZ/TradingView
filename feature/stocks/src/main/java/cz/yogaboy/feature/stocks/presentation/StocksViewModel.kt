@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
+import org.koin.core.annotation.InjectedParam
+import org.koin.core.annotation.Named
 
 sealed interface StocksUiState<out T> {
     data object Loading : StocksUiState<Nothing>
@@ -40,9 +42,9 @@ sealed interface StocksEvent {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StocksViewModel(
-    private val getAlpha: GetLatestPriceUseCase,
-    private val getTwelve: GetLatestPriceUseCase,
-    private val ticker: String,
+    @Named("alphaUC") private val getAlpha: GetLatestPriceUseCase,
+    @Named("twelveUC") private val getTwelve: GetLatestPriceUseCase,
+    @InjectedParam private val ticker: String,
     private val companyDetails: CompanyDetailsRepository? = null,
 ) : ViewModel() {
 

@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import cz.yogaboy.core.design.LocalDimens
 import cz.yogaboy.core.design.AuroraBackground
 import cz.yogaboy.core.design.FrostedSurface
+import cz.yogaboy.core.design.theme.tradingColors
 import cz.yogaboy.feature.stocks.presentation.model.DisplayPrice
 import cz.yogaboy.domain.marketdata.CompanyNews
 import cz.yogaboy.domain.marketdata.CompanyProfile
@@ -68,12 +69,7 @@ fun StocksScreen(
                         .fillMaxWidth()
                         .background(
                             if (drawBackground) Brush.verticalGradient(
-                                listOf(
-                                    Color(0xF20A1742),
-                                    Color(0xD90E2258),
-                                    Color(0x8F0D2B67),
-                                    Color.Transparent,
-                                ),
+                                MaterialTheme.tradingColors.headerScrim,
                             ) else Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent)),
                         ),
                 ) {
@@ -96,8 +92,8 @@ fun StocksScreen(
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,
-                            navigationIconContentColor = Color.White,
-                            titleContentColor = Color.White,
+                            navigationIconContentColor = MaterialTheme.tradingColors.onBackdrop,
+                            titleContentColor = MaterialTheme.tradingColors.onBackdrop,
                         ),
                     )
                 }
@@ -160,7 +156,7 @@ private fun PriceHistorySection(state: StocksUiState<List<PricePoint>>) {
                         text = "Posledních ${state.value.size} obchodních dnů: " +
                             "${if (change >= 0) "+" else ""}${"%.2f".format(change)} %",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (change >= 0) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                        color = if (change >= 0) MaterialTheme.tradingColors.positive else MaterialTheme.tradingColors.negative,
                     )
                 }
             }
@@ -179,7 +175,7 @@ private fun PriceHistoryChart(
     }
     val values = points.map(PricePoint::close)
     val positive = values.last() >= values.first()
-    val lineColor = if (positive) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error
+    val lineColor = if (positive) MaterialTheme.tradingColors.positive else MaterialTheme.tradingColors.negative
     val fillColor = lineColor.copy(alpha = 0.18f)
     val guideColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
 
@@ -804,7 +800,7 @@ private fun TwelveRow(
 
             price.change?.let { changeValue ->
                 val isUp = changeValue >= 0.0
-                val changeColor = if (isUp) Color(0xFF2E7D32) else Color(0xFFC62828)
+                val changeColor = if (isUp) MaterialTheme.tradingColors.positive else MaterialTheme.tradingColors.negative
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = if (isUp) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,

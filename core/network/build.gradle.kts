@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     id("tradingview.android-library")
+    alias(libs.plugins.koin.compiler)
 }
 
 fun Project.resolveApiKey(keyName: String): String {
@@ -60,6 +61,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.koin.annotations)
 
     api(libs.squareup.okhttp3)
     api(libs.squareup.okhttp3.logging.interceptor)

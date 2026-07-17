@@ -6,6 +6,7 @@ import cz.yogaboy.data.marketdata.alpha.di.marketDataAlphaModule
 import cz.yogaboy.data.marketdata.alpha.di.marketDataAlphaNetworkModule
 import cz.yogaboy.data.marketdata.twelvedata.di.twelveModule
 import cz.yogaboy.data.marketdata.twelvedata.di.twelveNetworkModule
+import cz.yogaboy.data.marketdata.cache.di.marketDataCacheModule
 import cz.yogaboy.feature.stocks.di.stocksFeatureModule
 import cz.yogaboy.feature.stocks.di.stocksPresentationModule
 import org.koin.android.ext.koin.androidContext
@@ -20,6 +21,7 @@ class TvApp : Application() {
             androidContext(this@TvApp)
             modules(
                 networkModule,
+                marketDataCacheModule,
                 marketDataAlphaNetworkModule,
                 marketDataAlphaModule,
                 twelveNetworkModule,
