@@ -7,9 +7,10 @@ plugins {
 android { namespace = "cz.yogaboy.feature.home" }
 
 dependencies {
-    implementation(libs.koin.annotations)
     implementation(project(":core:common"))
     implementation(project(":core:design"))
+    implementation(project(":domain:marketdata"))
+    implementation(libs.koin.annotations)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.koin.android)
     implementation(libs.koin.compose)

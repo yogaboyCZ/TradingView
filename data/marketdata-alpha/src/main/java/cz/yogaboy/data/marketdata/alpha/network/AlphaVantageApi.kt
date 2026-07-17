@@ -1,11 +1,19 @@
 package cz.yogaboy.data.marketdata.alpha.network
 
 import cz.yogaboy.data.marketdata.alpha.dto.GlobalQuoteEnvelope
+import cz.yogaboy.data.marketdata.alpha.dto.AlphaCompanyOverview
 import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface AlphaVantageApi {
+
+    @GET("query")
+    suspend fun getCompanyOverview(
+        @Query("function") function: String = "OVERVIEW",
+        @Query("symbol") symbol: String,
+        @Query("apikey") apiKey: String,
+    ): AlphaCompanyOverview
 
     @GET("query")
     suspend fun getGlobalQuote(

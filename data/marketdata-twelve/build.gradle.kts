@@ -56,6 +56,10 @@ android {
     buildFeatures { buildConfig = true }
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(project(":core:network"))
     implementation(project(":domain:marketdata"))
@@ -65,4 +69,10 @@ dependencies {
     implementation(libs.squareup.moshi.kotlin)
     implementation(libs.koin.core)
     implementation(libs.koin.annotations)
+    implementation(libs.kotlinx.coroutines.core)
+
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

@@ -1,5 +1,8 @@
 package cz.yogaboy.domain.marketdata
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+
 data class PricePoint(
     val date: String,
     val open: Double,
@@ -24,7 +27,18 @@ data class CompanyProfile(
     val state: String?,
     val country: String?,
     val phone: String?,
+    val source: CompanyProfileSource = CompanyProfileSource.UNKNOWN,
 )
+
+enum class CompanyProfileSource(val badge: String) {
+    TWELVE_DATA("TD"),
+    ALPHA_VANTAGE("AV"),
+    UNKNOWN("—"),
+}
+
+interface CompanyProfileRepository {
+    suspend fun getCompanyProfile(ticker: String): CompanyProfile
+}
 
 data class CompanyNews(
     val id: String,
@@ -33,8 +47,8 @@ data class CompanyNews(
     val summary: String?,
 )
 
-interface CompanyDetailsRepository {
+interface CompanyDetailsRepository : CompanyProfileRepository {
     suspend fun getDailyHistory(ticker: String): List<PricePoint>
-    suspend fun getCompanyProfile(ticker: String): CompanyProfile
+    fun observeDailyHistory(ticker: String): Flow<List<PricePoint>?> = flowOf(null)
     suspend fun getCompanyNews(ticker: String): List<CompanyNews>
 }

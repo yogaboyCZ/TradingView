@@ -4,9 +4,12 @@ import com.squareup.moshi.Moshi
 import cz.yogaboy.data.marketdata.alpha.BuildConfig
 import cz.yogaboy.data.marketdata.alpha.network.AlphaVantageApi
 import cz.yogaboy.data.marketdata.alpha.repository.AlphaMarketDataRepository
+import cz.yogaboy.data.marketdata.alpha.repository.AlphaCompanyProfileRepository
+import cz.yogaboy.data.marketdata.cache.CachedCompanyProfileRepository
 import cz.yogaboy.data.marketdata.cache.CachedMarketDataRepository
 import cz.yogaboy.data.marketdata.cache.MarketDataCache
 import cz.yogaboy.domain.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.CompanyProfileRepository
 import okhttp3.OkHttpClient
 import org.koin.core.annotation.Named
 import org.koin.dsl.bind
@@ -42,6 +45,19 @@ private fun cachedAlpha(
     moshi: Moshi,
 ): MarketDataRepository = CachedMarketDataRepository("alpha", remote, cache, moshi)
 
+@Named("alphaProfileRemote")
+private fun alphaProfileRemote(
+    api: AlphaVantageApi,
+    @Named("alphaApiKey") apiKey: String,
+): CompanyProfileRepository = AlphaCompanyProfileRepository(api, apiKey)
+
+@Named("alphaProfile")
+private fun cachedAlphaProfile(
+    @Named("alphaProfileRemote") remote: CompanyProfileRepository,
+    cache: MarketDataCache,
+    moshi: Moshi,
+): CompanyProfileRepository = CachedCompanyProfileRepository("alpha", remote, cache, moshi)
+
 val marketDataAlphaNetworkModule = module {
     single { create(::alphaApiKey) }
     single { create(::alphaRetrofit) }
@@ -51,4 +67,6 @@ val marketDataAlphaNetworkModule = module {
 val marketDataAlphaModule = module {
     single { create(::alphaRemote) }
     single { create(::cachedAlpha) } bind MarketDataRepository::class
+    single { create(::alphaProfileRemote) }
+    single { create(::cachedAlphaProfile) }
 }

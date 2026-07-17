@@ -25,7 +25,7 @@ interface TwelveDataApi {
     suspend fun getTimeSeries(
         @Query("symbol") symbol: String,
         @Query("interval") interval: String = "1day",
-        @Query("outputsize") outputSize: Int = 30,
+        @Query("outputsize") outputSize: Int = 365,
         @Query("order") order: String = "asc",
         @Query("apikey") apiKey: String,
     ): TwelveTimeSeries

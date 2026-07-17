@@ -4,6 +4,7 @@ import cz.yogaboy.data.marketdata.twelvedata.network.TwelveDataApi
 import cz.yogaboy.domain.marketdata.CompanyDetailsRepository
 import cz.yogaboy.domain.marketdata.CompanyNews
 import cz.yogaboy.domain.marketdata.CompanyProfile
+import cz.yogaboy.domain.marketdata.CompanyProfileSource
 import cz.yogaboy.domain.marketdata.PricePoint
 
 class TwelveCompanyDetailsRepository(
@@ -40,6 +41,7 @@ class TwelveCompanyDetailsRepository(
                 state = profile.state,
                 country = profile.country,
                 phone = profile.phone,
+                source = CompanyProfileSource.TWELVE_DATA,
             )
         }
 

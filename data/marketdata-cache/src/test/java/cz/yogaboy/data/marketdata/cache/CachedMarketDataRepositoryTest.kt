@@ -4,7 +4,11 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import cz.yogaboy.domain.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.CompanyDetailsRepository
+import cz.yogaboy.domain.marketdata.CompanyNews
+import cz.yogaboy.domain.marketdata.CompanyProfile
 import cz.yogaboy.domain.marketdata.Price
+import cz.yogaboy.domain.marketdata.PricePoint
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -45,6 +49,20 @@ private class FakeRemote(private val result: () -> Price?) : MarketDataRepositor
         calls++
         return result()
     }
+}
+
+private class FakeDetailsRemote(
+    private val history: List<PricePoint>,
+) : CompanyDetailsRepository {
+    var historyCalls = 0
+
+    override suspend fun getDailyHistory(ticker: String): List<PricePoint> {
+        historyCalls++
+        return history
+    }
+
+    override suspend fun getCompanyProfile(ticker: String): CompanyProfile = error("Not used")
+    override suspend fun getCompanyNews(ticker: String): List<CompanyNews> = error("Not used")
 }
 
 class CachedMarketDataRepositoryTest {
@@ -91,5 +109,21 @@ class CachedMarketDataRepositoryTest {
         val repository = CachedMarketDataRepository("alpha", remote, cache, moshi)
 
         assertNull(repository.getLatestPrice("NVDA"))
+    }
+
+    @Test
+    fun `history loaded for preview is reused by detail`() = runTest {
+        val history = listOf(
+            PricePoint("2026-07-16", 100.0, 102.0, 99.0, 101.0, 1_000),
+            PricePoint("2026-07-17", 101.0, 104.0, 100.0, 103.0, 1_200),
+        )
+        val cache = FakeCache()
+        val remote = FakeDetailsRemote(history)
+        val repository = CachedCompanyDetailsRepository("twelve", remote, cache, moshi)
+
+        assertEquals(history, repository.getDailyHistory("AAPL"))
+        assertEquals(history, repository.getDailyHistory("aapl"))
+        assertEquals(1, remote.historyCalls)
+        assertEquals(1, cache.writes)
     }
 }

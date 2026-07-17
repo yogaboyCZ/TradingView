@@ -19,17 +19,19 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.koin.annotations)
     implementation(project(":domain:marketdata"))
     implementation(project(":core:common"))
     implementation(project(":core:design"))
 
+    implementation(libs.koin.annotations)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
 
     implementation(libs.koin.android)
     implementation(libs.koin.compose)

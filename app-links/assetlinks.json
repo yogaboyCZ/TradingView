@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cz.yogaboy.tv",
+      "sha256_cert_fingerprints": [
+        "F3:43:00:EB:5B:65:88:34:38:14:77:10:B9:D8:53:8A:55:57:5E:11:E5:8D:28:E7:50:92:A3:93:7A:7A:A7:80"
+      ]
+    }
+  }
+]

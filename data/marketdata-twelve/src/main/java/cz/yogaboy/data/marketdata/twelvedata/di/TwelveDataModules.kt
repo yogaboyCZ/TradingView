@@ -8,7 +8,9 @@ import cz.yogaboy.data.marketdata.twelvedata.BuildConfig
 import cz.yogaboy.data.marketdata.twelvedata.network.TwelveDataApi
 import cz.yogaboy.data.marketdata.twelvedata.repository.TwelveCompanyDetailsRepository
 import cz.yogaboy.data.marketdata.twelvedata.repository.TwelveMarketDataRepository
+import cz.yogaboy.data.marketdata.twelvedata.repository.FallbackCompanyDetailsRepository
 import cz.yogaboy.domain.marketdata.CompanyDetailsRepository
+import cz.yogaboy.domain.marketdata.CompanyProfileRepository
 import cz.yogaboy.domain.marketdata.MarketDataRepository
 import okhttp3.OkHttpClient
 import org.koin.core.annotation.Named
@@ -50,11 +52,17 @@ private fun twelveDetailsRemote(
     @Named("twelveApiKey") apiKey: String,
 ): CompanyDetailsRepository = TwelveCompanyDetailsRepository(api, apiKey)
 
+@Named("twelveDetails")
 private fun cachedDetails(
     @Named("twelveDetailsRemote") remote: CompanyDetailsRepository,
     cache: MarketDataCache,
     moshi: Moshi,
 ): CompanyDetailsRepository = CachedCompanyDetailsRepository("twelve", remote, cache, moshi)
+
+private fun fallbackDetails(
+    @Named("twelveDetails") primary: CompanyDetailsRepository,
+    @Named("alphaProfile") profileFallback: CompanyProfileRepository,
+): CompanyDetailsRepository = FallbackCompanyDetailsRepository(primary, profileFallback)
 
 val twelveNetworkModule = module {
     single { create(::twelveApiKey) }
@@ -67,4 +75,5 @@ val twelveModule = module {
     single { create(::cachedTwelve) }
     single { create(::twelveDetailsRemote) }
     single { create(::cachedDetails) }
+    single { create(::fallbackDetails) }
 }

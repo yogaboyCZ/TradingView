@@ -6,9 +6,12 @@ import com.squareup.moshi.Types
 import cz.yogaboy.domain.marketdata.CompanyDetailsRepository
 import cz.yogaboy.domain.marketdata.CompanyNews
 import cz.yogaboy.domain.marketdata.CompanyProfile
+import cz.yogaboy.domain.marketdata.CompanyProfileRepository
 import cz.yogaboy.domain.marketdata.MarketDataRepository
 import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.domain.marketdata.PricePoint
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class CachedMarketDataRepository(
     private val provider: String,
@@ -51,11 +54,14 @@ class CachedCompanyDetailsRepository(
 
     override suspend fun getDailyHistory(ticker: String): List<PricePoint> = cached(
         ticker = ticker,
-        dataType = "history",
+        dataType = HISTORY_DATA_TYPE,
         freshFor = CachePolicy.HISTORY_FRESH,
         maxStale = CachePolicy.DETAILS_MAX_STALE,
         adapter = historyAdapter,
     ) { remote.getDailyHistory(ticker) }
+
+    override fun observeDailyHistory(ticker: String): Flow<List<PricePoint>?> =
+        cache.observe(provider, ticker, HISTORY_DATA_TYPE, historyAdapter).map { it?.value }
 
     override suspend fun getCompanyProfile(ticker: String): CompanyProfile = cached(
         ticker = ticker,
@@ -90,4 +96,34 @@ class CachedCompanyDetailsRepository(
             cached?.takeIf { it.ageMillis <= maxStale }?.value ?: throw error
         }
     }
+
+    private companion object {
+        const val HISTORY_DATA_TYPE = "history-1day-365"
+    }
+}
+
+class CachedCompanyProfileRepository(
+    private val provider: String,
+    private val remote: CompanyProfileRepository,
+    private val cache: MarketDataCache,
+    moshi: Moshi,
+) : CompanyProfileRepository {
+    private val adapter = moshi.adapter(CompanyProfile::class.java)
+
+    override suspend fun getCompanyProfile(ticker: String): CompanyProfile =
+        cache.withKeyLock("$provider:${ticker.uppercase()}:profile") {
+            val cached = cache.read(provider, ticker, "profile", adapter)
+            if (cached != null && cached.ageMillis <= CachePolicy.PROFILE_FRESH) {
+                return@withKeyLock cached.value
+            }
+
+            try {
+                remote.getCompanyProfile(ticker).also {
+                    cache.write(provider, ticker, "profile", it, adapter)
+                }
+            } catch (error: Throwable) {
+                cached?.takeIf { it.ageMillis <= CachePolicy.PROFILE_MAX_STALE }?.value
+                    ?: throw error
+            }
+        }
 }

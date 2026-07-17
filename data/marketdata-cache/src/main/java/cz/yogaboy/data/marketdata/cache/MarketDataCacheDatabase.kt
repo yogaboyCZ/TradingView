@@ -6,6 +6,7 @@ import androidx.room3.Entity
 import androidx.room3.Query
 import androidx.room3.RoomDatabase
 import androidx.room3.Upsert
+import kotlinx.coroutines.flow.Flow
 
 @Entity(
     tableName = "market_data_cache",
@@ -26,6 +27,12 @@ interface MarketDataCacheDao {
             "WHERE provider = :provider AND ticker = :ticker AND dataType = :dataType"
     )
     suspend fun get(provider: String, ticker: String, dataType: String): CacheEntry?
+
+    @Query(
+        "SELECT * FROM market_data_cache " +
+            "WHERE provider = :provider AND ticker = :ticker AND dataType = :dataType"
+    )
+    fun observe(provider: String, ticker: String, dataType: String): Flow<CacheEntry?>
 
     @Upsert
     suspend fun upsert(entry: CacheEntry)

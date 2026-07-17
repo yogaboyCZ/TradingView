@@ -2,24 +2,25 @@ package cz.yogaboy.tv.nav
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import cz.yogaboy.feature.home.presentation.HomeEffect
+import cz.yogaboy.feature.home.presentation.HomeScreen
+import cz.yogaboy.feature.home.presentation.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
-import cz.yogaboy.feature.home.presentation.*
 
 @Composable
-fun HomeEntryScreen(
+fun HomeRoute(
     onNavigateToDetail: (String) -> Unit,
     wideLayout: Boolean = false,
     supportingPane: Boolean = false,
     selectedTicker: String? = null,
     drawBackground: Boolean = true,
 ) {
-    val vm: HomeViewModel = koinViewModel()
-    val state by vm.state.collectAsState()
+    val viewModel: HomeViewModel = koinViewModel()
+    val state = viewModel.state.collectAsStateWithLifecycle().value
 
-    LaunchedEffect(Unit) {
-        vm.effects.collect { effect ->
+    LaunchedEffect(viewModel, onNavigateToDetail) {
+        viewModel.effects.collect { effect ->
             when (effect) {
                 is HomeEffect.NavigateToDetail -> onNavigateToDetail(effect.ticker)
             }
@@ -28,7 +29,7 @@ fun HomeEntryScreen(
 
     HomeScreen(
         state = state,
-        onEvent = { vm.handle(it) },
+        onEvent = viewModel::handle,
         wideLayout = wideLayout,
         supportingPane = supportingPane,
         selectedTicker = selectedTicker,

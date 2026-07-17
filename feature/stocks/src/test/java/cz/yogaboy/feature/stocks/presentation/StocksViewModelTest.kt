@@ -4,12 +4,16 @@ import android.util.Log
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import cz.yogaboy.domain.marketdata.MarketDataRepository
+import cz.yogaboy.domain.marketdata.LivePriceRepository
+import cz.yogaboy.domain.marketdata.LivePriceTick
 import cz.yogaboy.domain.marketdata.Price
 import cz.yogaboy.feature.stocks.domain.GetLatestPriceUseCase
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -21,6 +25,11 @@ import java.io.IOException
 
 private class FakeRepo(private val block: (String) -> Price?) : MarketDataRepository {
     override suspend fun getLatestPrice(ticker: String): Price? = block(ticker)
+}
+
+private object FakeLivePrices : LivePriceRepository {
+    override fun observePrices(ticker: String, initialPrice: Double): Flow<LivePriceTick> =
+        flowOf(LivePriceTick(initialPrice, 0.0, 0L, simulated = true))
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,13 +60,43 @@ class CancellationException {
     }
 
     @Test
+    fun `loads Alpha Vantage only after comparison is requested`() = runTest(mainDispatcher.dispatcher()) {
+        var alphaCalls = 0
+        val getAlpha = GetLatestPriceUseCase(
+            FakeRepo {
+                alphaCalls++
+                Price("AAPL", 227.76)
+            }
+        )
+        val getTwelve = GetLatestPriceUseCase(FakeRepo { Price("AAPL", 227.70) })
+        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL", livePrices = FakeLivePrices)
+
+        vm.state.test {
+            var current = awaitItem()
+            while (
+                current.twelve is StocksUiState.Loading ||
+                current.alpha !is StocksUiState.Deferred
+            ) current = awaitItem()
+
+            assertEquals(0, alphaCalls)
+
+            vm.handle(StocksEvent.RequestAlphaComparison)
+            while (current.alpha !is StocksUiState.Data) current = awaitItem()
+
+            assertEquals(1, alphaCalls)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `emits Loading then Data for both providers on success`() = runTest(mainDispatcher.dispatcher()) {
         val alphaP = Price("AAPL", 227.76, 2.86, 1.2717, 224.9, "2025-08-22", name = "Apple Inc.")
         val twelveP = Price("AAPL", 227.70)
 
         val getAlpha = GetLatestPriceUseCase(FakeRepo { alphaP })
         val getTwelve = GetLatestPriceUseCase(FakeRepo { twelveP })
-        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL")
+        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL", livePrices = FakeLivePrices)
+        vm.handle(StocksEvent.RequestAlphaComparison)
 
         vm.state.test {
             val first = awaitItem()
@@ -82,7 +121,8 @@ class CancellationException {
         val twelveP = Price("MSFT", 506.69)
         val getAlpha = GetLatestPriceUseCase(FakeRepo { null })
         val getTwelve = GetLatestPriceUseCase(FakeRepo { twelveP })
-        val vm = StocksViewModel(getAlpha, getTwelve, "MSFT")
+        val vm = StocksViewModel(getAlpha, getTwelve, "MSFT", livePrices = FakeLivePrices)
+        vm.handle(StocksEvent.RequestAlphaComparison)
 
         vm.state.test {
             awaitItem() // initial Loading/Loading
@@ -101,14 +141,16 @@ class CancellationException {
     fun `converts repository exception to provider Error state`() = runTest(mainDispatcher.dispatcher()) {
         val getAlpha = GetLatestPriceUseCase(FakeRepo { throw IOException("Network unavailable") })
         val getTwelve = GetLatestPriceUseCase(FakeRepo { Price("AAPL", 227.70) })
-        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL")
+        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL", livePrices = FakeLivePrices)
+        vm.handle(StocksEvent.RequestAlphaComparison)
 
         vm.state.test {
             awaitItem() // initial Loading/Loading
 
             val done = awaitNonLoading()
             val alpha = done.alpha as StocksUiState.Error
-            assertEquals("Network unavailable", alpha.message)
+            assertEquals("Srovnávací data teď nejsou dostupná.", alpha.message)
+            assertEquals("Network unavailable", alpha.technicalMessage)
             assertTrue(done.twelve is StocksUiState.Data)
 
             cancelAndIgnoreRemainingEvents()
@@ -126,7 +168,8 @@ class CancellationException {
             }
         )
         val getTwelve = GetLatestPriceUseCase(FakeRepo { Price("AAPL", 227.70) })
-        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL")
+        val vm = StocksViewModel(getAlpha, getTwelve, "AAPL", livePrices = FakeLivePrices)
+        vm.handle(StocksEvent.RequestAlphaComparison)
 
         vm.state.test {
             awaitItem() // initial Loading/Loading
@@ -147,7 +190,8 @@ class CancellationException {
     fun `emits Loading then Error for both providers on double failure`() = runTest(mainDispatcher.dispatcher()) {
         val getAlpha = GetLatestPriceUseCase(FakeRepo { null })
         val getTwelve = GetLatestPriceUseCase(FakeRepo { null })
-        val vm = StocksViewModel(getAlpha, getTwelve, "NVDA")
+        val vm = StocksViewModel(getAlpha, getTwelve, "NVDA", livePrices = FakeLivePrices)
+        vm.handle(StocksEvent.RequestAlphaComparison)
 
         vm.state.test {
             awaitItem() // initial Loading/Loading

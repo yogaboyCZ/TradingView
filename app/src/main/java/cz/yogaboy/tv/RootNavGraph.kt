@@ -29,7 +29,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import cz.yogaboy.tv.nav.HomeDest
-import cz.yogaboy.tv.nav.HomeEntryScreen
+import cz.yogaboy.tv.nav.HomeRoute
 import cz.yogaboy.tv.nav.StocksDest
 import cz.yogaboy.feature.stocks.presentation.StocksRoute
 import cz.yogaboy.core.design.AuroraBackground
@@ -73,17 +73,19 @@ fun RootNavGraph(initialTicker: String? = null) {
                 },
             )
         } else {
-            PhoneNavigation(
-                backStack = backStack,
-                onTickerSelected = { ticker ->
-                    selectedTicker = ticker
-                    backStack.add(StocksDest(ticker))
-                },
-                onBack = {
-                    backStack.removeLastOrNull()
-                    selectedTicker = null
-                },
-            )
+            AuroraBackground(Modifier.fillMaxSize()) {
+                PhoneNavigation(
+                    backStack = backStack,
+                    onTickerSelected = { ticker ->
+                        selectedTicker = ticker
+                        backStack.add(StocksDest(ticker))
+                    },
+                    onBack = {
+                        backStack.removeLastOrNull()
+                        selectedTicker = null
+                    },
+                )
+            }
         }
     }
 }
@@ -119,9 +121,11 @@ private fun ListDetailLayout(
                     .fillMaxHeight()
                     .clipToBounds(),
             ) {
-                HomeEntryScreen(
+                HomeRoute(
                     onNavigateToDetail = onTickerSelected,
                     wideLayout = true,
+                    // Switch to the target grid immediately. Home keeps that target
+                    // column count stable while this pane finishes expanding.
                     supportingPane = selectedTicker != null,
                     selectedTicker = selectedTicker,
                     drawBackground = false,
@@ -188,14 +192,16 @@ private fun PhoneNavigation(
         },
         entryProvider = entryProvider {
             entry<HomeDest> {
-                HomeEntryScreen(
+                HomeRoute(
                     onNavigateToDetail = onTickerSelected,
+                    drawBackground = false,
                 )
             }
             entry<StocksDest> { destination ->
                 StocksRoute(
                     ticker = destination.ticker,
                     onBackClick = onBack,
+                    drawBackground = false,
                 )
             }
         },

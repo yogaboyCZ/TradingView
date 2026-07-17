@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_title">Trading View</string>
+    <string name="home_search_placeholder">aapl, nvda, msft…</string>
+    <string name="home_search_button">Search</string>
+    <string name="action_clear_search">Clear search</string>
+    <string name="action_expand_search">Expand search</string>
+    <string name="home_suggested_products_title">Suggested products</string>
+    <string name="home_suggested_products_description">Select a stock to view its current price.</string>
+    <string name="home_chart_unavailable">TD chart is unavailable</string>
+    <string name="percentage_value">%1$s%2$.2f%%</string>
+    <string name="home_period_change">Period change: %1$s%2$.1f%%</string>
+    <string name="category_technology">Technology</string>
+    <string name="category_semiconductors">Semiconductors</string>
+    <string name="category_internet">Internet</string>
+    <string name="category_e_commerce">E-commerce</string>
+    <string name="category_consumer_goods">Consumer goods</string>
+    <string name="category_finance">Finance</string>
+    <string name="category_aerospace">Aerospace</string>
+    <string name="category_automotive">Automotive</string>
+    <string name="category_banking">Banking</string>
+    <string name="category_enterprise_software">Enterprise software</string>
+    <string name="category_semiconductor_equipment">Semiconductor equipment</string>
+    <string name="category_energy">Energy</string>
+    <string name="home_card_title">Home screen</string>
+    <string name="home_card_desc">Search results and charts will appear after entering a product.</string>
+    <string name="stocks_price">Price %1$s: %2$s</string>
+    <string name="stocks_error">An error occurred</string>
+    <string name="stocks_loading">Loading…</string>
+    <string name="stocks_errors">Error</string>
+    <string name="stocks_no_data">No data</string>
+    <string name="twelve_data_provider">TwelveData</string>
+    <string name="stocks_change">Change: %1$s</string>
+    <string name="stocks_previous_close">Previous close: %1$s</string>
+    <string name="stocks_price_ticker">Price %1$s: %2$s</string>
+    <string name="alpha_vantage_provider">AlphaVantage</string>
+    <string name="stocks_price_title">Current price</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="demo_count">Count: %1$d</string>
+</resources>

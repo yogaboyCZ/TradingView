@@ -17,6 +17,7 @@ data class AuroraColors(
 data class TradingColors(
     val positive: Color,
     val negative: Color,
+    val chartCrosshair: Color,
     val onBackdrop: Color,
     val headerScrim: List<Color>,
     val searchContainer: Color,
@@ -52,6 +53,7 @@ val onSurfaceDarkMedium = Color(0xFFC8E7F0)
 val TradingLight = TradingColors(
     positive = Color(0xFF007A63),
     negative = Color(0xFFBA1A1A),
+    chartCrosshair = Color(0xFF5842C3),
     onBackdrop = Color.White,
     headerScrim = listOf(
         Color(0xF20A1742),
@@ -73,6 +75,7 @@ val TradingLight = TradingColors(
 val TradingDark = TradingColors(
     positive = Color(0xFF63D9B9),
     negative = Color(0xFFFFB4AB),
+    chartCrosshair = Color(0xFF8FD8FF),
     onBackdrop = Color.White,
     headerScrim = listOf(
         Color(0xFA050D2C),

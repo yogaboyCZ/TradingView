@@ -3,6 +3,9 @@ package cz.yogaboy.data.marketdata.cache
 import com.squareup.moshi.JsonAdapter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
 import java.util.concurrent.ConcurrentHashMap
 
 data class CachedValue<T>(
@@ -11,6 +14,13 @@ data class CachedValue<T>(
 )
 
 interface MarketDataCache {
+    fun <T> observe(
+        provider: String,
+        ticker: String,
+        dataType: String,
+        adapter: JsonAdapter<T>,
+    ): Flow<CachedValue<T>?> = flowOf(null)
+
     suspend fun <T> read(
         provider: String,
         ticker: String,
@@ -34,6 +44,21 @@ class RoomMarketDataCache(
     private val nowMillis: () -> Long = System::currentTimeMillis,
 ) : MarketDataCache {
     private val locks = ConcurrentHashMap<String, Mutex>()
+
+    override fun <T> observe(
+        provider: String,
+        ticker: String,
+        dataType: String,
+        adapter: JsonAdapter<T>,
+    ): Flow<CachedValue<T>?> {
+        val normalizedTicker = ticker.trim().uppercase()
+        return dao.observe(provider, normalizedTicker, dataType).map { entry ->
+            entry ?: return@map null
+            adapter.fromJson(entry.payload)?.let { value ->
+                CachedValue(value, (nowMillis() - entry.fetchedAt).coerceAtLeast(0L))
+            }
+        }
+    }
 
     override suspend fun <T> read(
         provider: String,
