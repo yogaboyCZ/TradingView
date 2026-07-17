@@ -132,8 +132,13 @@ fun HomeScreen(
                                 .fillMaxWidth()
                                 .onSizeChanged {
                                     if (it.height > headerHeightPx) headerHeightPx = it.height
-                                }
-                                .background(
+                                },
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .graphicsLayer { alpha = 1f - collapseProgress }
+                                    .background(
                                     if (drawBackground) Brush.verticalGradient(
                                         colors = listOf(
                                             Color(0xF20A1742),
@@ -142,8 +147,8 @@ fun HomeScreen(
                                             Color.Transparent,
                                         ),
                                     ) else Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent)),
-                                ),
-                        ) {
+                                    ),
+                            )
                             Column(
                                 Modifier
                                     .fillMaxWidth()
@@ -161,7 +166,10 @@ fun HomeScreen(
                                             Box(
                                                 Modifier
                                                     .fillMaxWidth()
-                                                    .graphicsLayer { alpha = 1f - collapseProgress },
+                                                    .graphicsLayer {
+                                                        alpha = 1f -
+                                                            (collapseProgress / 0.35f).coerceIn(0f, 1f)
+                                                    },
                                                 contentAlignment = Alignment.Center,
                                             ) {
                                                 Text(
@@ -182,7 +190,10 @@ fun HomeScreen(
                                         modifier = Modifier.padding(
                                             start = LocalDimens.current.small,
                                             bottom = LocalDimens.current.small,
-                                        ).graphicsLayer { alpha = 1f - collapseProgress },
+                                        ).graphicsLayer {
+                                            alpha = 1f -
+                                                (collapseProgress / 0.35f).coerceIn(0f, 1f)
+                                        },
                                         style = MaterialTheme.typography.titleLarge,
                                         color = Color.White,
                                     )
@@ -486,7 +497,7 @@ private fun TopSearchBar(
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
     ) {
-        val mergeProgress = ((collapseProgress - 0.28f) / 0.48f).coerceIn(0f, 1f)
+        val mergeProgress = ((collapseProgress - 0.08f) / 0.27f).coerceIn(0f, 1f)
         val buttonCollapse = ((collapseProgress - 0.68f) / 0.32f).coerceIn(0f, 1f)
         val buttonWidth = 104.dp * (1f - buttonCollapse)
         val gapWidth = LocalDimens.current.medium * (1f - mergeProgress)
